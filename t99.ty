@@ -1,0 +1,26 @@
+declare testvar;
+
+proc testfun ( x, y, z ) { 
+    declare samplename;
+    x = y; 
+    z = x;
+}
+
+proc somethingrandom ( this, that ) { 
+    declare simple; 
+    read simple; 
+    this = that + simple; 
+    if ( x + x ) { 
+        x = x + 4;
+    } else { 
+        x = (x - (x + 4));
+    };
+    while ( x + x ) {
+        write x+x;
+    }; 
+}
+
+proc main ( foo ) {
+    testval = 792;
+    call testfun(1, 2, 3);
+}

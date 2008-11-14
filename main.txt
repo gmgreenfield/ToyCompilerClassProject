@@ -1,0 +1,30 @@
+#-----------------------------------
+  This is a translation of
+  
+      proc main () { write 9 ; }
+  
+  into Tuple.
+------------------------------------#
+
+(ASSIGN,FP,BP)
+(ADDI,SP,BP,1)
+(ASSIGN,M[SP+1],100)  # 100 is the return label #
+(ASSIGN,M[SP+2],SP)   # store old values of SP,FP #
+(ASSIGN,M[SP+3],FP)
+(ASSIGN,FP,SP)
+(ADDI,SP,SP,5)
+(JUMP,200)            # 200 is the main label #
+
+# notice that returning from
+  the main procedure means
+  the program is finished #
+(LABEL,100)
+(EXIT)
+
+# Here's the body of main.#
+(LABEL,200)
+(WRITEI,9)
+(ASSIGN,R1,M[FP+1]) # get return label #
+(ASSIGN,SP,M[FP+2])
+(ASSIGN,FP,M[FP+3])
+(JUMP,R1)
