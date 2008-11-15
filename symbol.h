@@ -3,7 +3,7 @@
 /*
 *	Symbol table management for toy language compiler.
 */
-extern int	symbol_insert(char* name);
+extern int	symbol_insert(char* name, int entry_type);
 extern void	symbol_declare(int i);
 
 extern int	symbol_find(char* name);
