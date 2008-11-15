@@ -35,7 +35,7 @@ void print_symboltable(void)
 void symbolscan(tree *node) {
     if(node->child1 != NULL) { symbolscan(node->child1); }
     if(node->next != NULL) { symbolscan(node->next); }
-    printf("scan:%s\n", node->nodeName);
+    if(node->nodeName != NULL) { printf("scan:%s\n", node->nodeName); }
     return;
 }
 
@@ -43,85 +43,60 @@ void mk_symboltable(tree *p)
 {
 	switch (p->nodeTag) {
 	case PROGRAM:
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
-		if (p->next1 != NULL) {
-			mk_symboltable(p->next1);
-		}
+		if (p->next != NULL) { symbolscan(p->next); }
+		if (p->next1 != NULL) { mk_symboltable(p->next1); }
 		break;
 
 	case WHILE_STMT:
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
 	case IFTHENELSE_STMT:
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
-		if (p->next1 != NULL) {
-			mk_symboltable(p->next1);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
+		if (p->next1 != NULL) { mk_symboltable(p->next1); }
 		break;
 
 	case PROCS:
 		mk_symboltable(p->child1);
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
 	case PROCDECL: /* scan for symbols to add to table */
-		if (p->next != NULL) { symbolscan(p->next); } 
+		if (p->next != NULL) { symbolscan(p->next); }
+		if (p->next1 != NULL) { symbolscan(p->next1); }
 		break;
 
 	case VARS: 
 		mk_symboltable(p->child1);
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
 	case VARS_TAIL:
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
 	case DECLS: 
 		mk_symboltable(p->child1);
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
 	case ARGS:
 		mk_symboltable(p->child1);
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
 	case ARGS_TAIL:
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
 	case F_CALL:
 		mk_symboltable(p->child1);
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
 	case STMTS:
 		mk_symboltable(p->child1);
-		if (p->next != NULL) {
-			mk_symboltable(p->next);
-		}
+		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
 	case ASSIGNSTMT:
