@@ -1,26 +1,20 @@
-declare testvar;
+declare temp;
+declare test;
+declare foobar;
 
-proc testfun ( x, y, z ) { 
-    declare samplename;
-    x = y; 
-    z = x;
+proc randw (x, y, z) {
+     read x;
+     read y;
+     write y + z;
 }
 
-proc somethingrandom ( this, that ) { 
-    declare simple; 
-    read simple; 
-    this = that + simple; 
-    if ( x + x ) { 
-        x = x + 4;
-    } else { 
-        x = (x - (x + 4));
-    };
-    while ( x + x ) {
-        write x+x;
-    }; 
+proc test ( foo, bar, baz ) {
+     foo = baz;
+     baz = bar;
+     bar = foo;
 }
 
-proc main ( foo ) {
-    testval = 792;
-    call testfun(1, 2, 3);
+proc main ( arg1, arg2 ) {
+     call test ( arg1, arg2, arg1 );
+     call randw ( temp, test, foobar );
 }

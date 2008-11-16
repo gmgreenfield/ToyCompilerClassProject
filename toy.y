@@ -402,8 +402,8 @@ void prettystmts (tree *p) {
 }
 
 void pretty (tree *ast) {
+     printf("prettyprint...\n");
      if (ast != NULL) prettystmts(ast);
-     printf("\n");
 }
 
 int
@@ -419,7 +419,7 @@ main(int argc,char *argv[])
      root = (tree*) yyparse();
      pretty(root);
      mk_symboltable(root);
-     //print_symboltable();
+     print_symboltable();
      return 1;
 }
 
