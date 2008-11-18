@@ -3,11 +3,12 @@
 /*
 *	Symbol table management for toy language compiler.
 */
-extern int	symbol_insert(char *, int, char *);
+extern int	symbol_insert(char *, int, char *, int);
 extern void	symbol_declare(int);
 
-/* extern void     symbolscan(tree *, int, char *); */    
+/* extern void     symbolscan(tree *, int, char *, int); */  
 extern void     print_symboltable(void);
+/* extern int      count_func_args(tree *); */
 
 extern int	symbol_find(char *);
 extern char*    symbol_name(int);

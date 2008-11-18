@@ -2,7 +2,7 @@ declare temp;
 declare test;
 declare foobar;
 
-proc readandwrite (x, y, z) {
+proc readand (x, y, z) {
      read x;
      read y;
      write y + z;

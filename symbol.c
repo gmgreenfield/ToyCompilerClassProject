@@ -16,39 +16,52 @@ typedef struct
     int declared;		        /* 1 if already declared, 0 else */
     int type;				/* tells if its a routine or a variable */
     char *local_to;			/* who the variable belongs to if in a proc, or null if its global */
+    int num_args;                       /* will be 0 in the case of a variable */
 } ENTRY;
 
 #define		MAX_SYMBOLS	100
 #define         ROUTINE         0
-#define         VARIABLE        1     
+#define         VARIABLE        1
+
 static ENTRY symbol_table[MAX_SYMBOLS];	/* static: we treat the table as an ADT */
-static int n_symbol_table = 0;	/* number of entries in symbol table */
+static int n_symbol_table = 0;	        /* number of entries in symbol table */
 
 void print_symboltable(void)
 {
     int i;
     printf("symboltable...\n");
     for (i = 0; i < n_symbol_table; i++) {
-	printf("name:%15s type:%9s local_to:%15s declared:%3d\n", symbol_table[i].name, symbol_table[i].type == 0 ? "routine" : "variable",
-	       symbol_table[i].local_to, symbol_table[i].declared);
-    }
-}
-
-void symbolscan(tree *node, int entry_type, char *local_to) {
-    if(node->child1 != NULL) { symbolscan(node->child1, entry_type, local_to); }
-    if(node->next != NULL) { symbolscan(node->next, entry_type, local_to); }
-    if(node->nodeName != NULL) {
-	/* printf("scan:%s\n", node->nodeName); */
-	symbol_insert(node->nodeName, entry_type, local_to);
+	printf("name:%15s type:%9s local_to:%15s declared:%3d args:%3d\n", symbol_table[i].name,
+	       symbol_table[i].type == ROUTINE ? "routine" : "variable", symbol_table[i].local_to,
+	       symbol_table[i].declared, symbol_table[i].num_args);
     }
     return;
 }
 
+/* traverse AST and write initial contents to symbol table in post-order traversal */
+void symbolscan(tree *node, int entry_type, char *local_to, int num_args) {
+    if(node->child1 != NULL) { symbolscan(node->child1, entry_type, local_to, num_args); }
+    if(node->next != NULL) { symbolscan(node->next, entry_type, local_to, num_args); }
+    if(node->nodeName != NULL) { symbol_insert(node->nodeName, entry_type, local_to, num_args); }
+    return;
+}
+
+int count_func_args(tree *p) {
+    int cnt = 0;
+    if(p == NULL) return cnt;
+    while( p->next != NULL ) {
+	cnt++;
+	p = p->next->next;
+    }
+    return cnt + 1;
+}
+
+/* construct initial symbol table and add variable/routine name and who its parent is, and what type */
 void mk_symboltable(tree *p)
 {
 	switch (p->nodeTag) {
-	case PROGRAM: /* scan for symbols to add to table */
-	    if (p->next != NULL) { symbolscan(p->next, VARIABLE, "*global*"); } /* decl list */
+	case PROGRAM: /* scan for symbols */
+	    if (p->next != NULL) { symbolscan(p->next, VARIABLE, "*", 0); } /* decl list */
 	    if (p->next1 != NULL) { mk_symboltable(p->next1); } /* proc list */
 	    break;
 
@@ -66,10 +79,10 @@ void mk_symboltable(tree *p)
 		if (p->next != NULL) { mk_symboltable(p->next); }
 		break;
 
-	case PROCDECL: /* scan for symbols to add */
-	    if (p->child1 != NULL) { symbolscan(p->child1, ROUTINE, "*n/a*"); } /* procedure name */
-	    if (p->next != NULL) { symbolscan(p->next, VARIABLE, p->child1->nodeName); } /* arg variable list */
-	    if (p->next1 != NULL) { symbolscan(p->next1, VARIABLE, p->child1->nodeName); } /* proc body decl list */
+	case PROCDECL: /* scan for symbols */
+	    if (p->child1 != NULL) { symbolscan(p->child1, ROUTINE, "*", count_func_args(p->next)); } /* procedure name */
+	    if (p->next != NULL) { symbolscan(p->next, VARIABLE, p->child1->nodeName, 0); } /* arg variable list */
+	    if (p->next1 != NULL) { symbolscan(p->next1, VARIABLE, p->child1->nodeName, 0); } /* proc body decl list */
 	    break;
 
 	case VARS: 
@@ -131,7 +144,7 @@ int symbol_find(char *name)
 	return -1;
 }
 
-int symbol_insert(char *name, int entry_type, char *local_to)
+int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
 /*	Insert new symbol with a given type into symbol table, returns index new value */
 /*      Routine is 0, variable is 1 for the entry_type */
 {
@@ -143,6 +156,7 @@ int symbol_insert(char *name, int entry_type, char *local_to)
 	symbol_table[n_symbol_table].declared = 0;
 	symbol_table[n_symbol_table].type = entry_type;
 	symbol_table[n_symbol_table].local_to = strdup(local_to);
+	symbol_table[n_symbol_table].num_args = num_args;
 	return n_symbol_table++;
 }
 
