@@ -17,11 +17,14 @@ typedef struct
     int type;				/* tells if its a routine or a variable */
     char *local_to;			/* who the variable belongs to if in a proc, or null if its global */
     int num_args;                       /* will be 0 in the case of a variable */
+    int fp_offset;                      /* variable is found at offset i from the frame pointer (fp and base offsets are mutually exclusive) */
+    int base_addr_offset;               /* variable is found at offset i from the constant base address*/
 } ENTRY;
 
 #define		MAX_SYMBOLS	100
 #define         ROUTINE         0
 #define         VARIABLE        1
+#define         FP_BASE         3
 
 static ENTRY symbol_table[MAX_SYMBOLS];	/* static: we treat the table as an ADT */
 static int n_symbol_table = 0;	        /* number of entries in symbol table */
@@ -31,9 +34,9 @@ void print_symboltable(void)
     int i;
     printf("symboltable...\n");
     for (i = 0; i < n_symbol_table; i++) {
-	printf("name:%15s type:%9s local_to:%15s declared:%3d args:%3d\n", symbol_table[i].name,
+	printf("name:%15s type:%9s local_to:%15s declared:%d num_args:%2d fp_offset:%2d base_addr_offset:%2d\n", symbol_table[i].name,
 	       symbol_table[i].type == ROUTINE ? "routine" : "variable", symbol_table[i].local_to,
-	       symbol_table[i].declared, symbol_table[i].num_args);
+	       symbol_table[i].declared, symbol_table[i].num_args, symbol_table[i].fp_offset, symbol_table[i].base_addr_offset);
     }
     return;
 }
@@ -50,33 +53,55 @@ int count_func_args(tree *p) {
     int cnt = 0;
     if(p == NULL) return cnt;
     while( p->next != NULL ) {
-	cnt++;
-	p = p->next->next;
+        cnt++;
+        p = p->next->next;
     }
     return cnt + 1;
 }
 
-/* construct initial symbol table and add variable/routine name and who its parent is, and what type */
-void mk_symboltable(tree *p)
+void mk_symboltable(tree *p) {
+    int i, j, base_cnt = 0;
+    
+    start_symboltable(p);
+
+    /* global variables */
+    for(i = 0; i < n_symbol_table; i++) {
+	if(symbol_table[i].type == VARIABLE && strcmp(symbol_table[i].local_to, "*") == 0)
+	    symbol_table[i].base_addr_offset = base_cnt++;
+    }
+    base_cnt = 0;
+    /* local variables */
+    for(i = 0; i < n_symbol_table; i++) {
+	if(symbol_table[i].type == ROUTINE) {
+	    for(j = i + 1; symbol_table[j].type != ROUTINE; j++) {
+		symbol_table[j].fp_offset = FP_BASE + base_cnt++;
+	    } /* for */
+	    base_cnt = 0;
+	} /* if */
+    } /* for */
+    return;
+}
+
+void start_symboltable(tree *p)
 {
 	switch (p->nodeTag) {
 	case PROGRAM: /* scan for symbols */
 	    if (p->next != NULL) { symbolscan(p->next, VARIABLE, "*", 0); } /* decl list */
-	    if (p->next1 != NULL) { mk_symboltable(p->next1); } /* proc list */
+	    if (p->next1 != NULL) { start_symboltable(p->next1); } /* proc list */
 	    break;
 
 	case WHILE_STMT:
-		if (p->next != NULL) { mk_symboltable(p->next); }
+		if (p->next != NULL) { start_symboltable(p->next); }
 		break;
 
 	case IFTHENELSE_STMT:
-		if (p->next != NULL) { mk_symboltable(p->next); }
-		if (p->next1 != NULL) { mk_symboltable(p->next1); }
+		if (p->next != NULL) { start_symboltable(p->next); }
+		if (p->next1 != NULL) { start_symboltable(p->next1); }
 		break;
 
 	case PROCS:
-		mk_symboltable(p->child1);
-		if (p->next != NULL) { mk_symboltable(p->next); }
+		start_symboltable(p->child1);
+		if (p->next != NULL) { start_symboltable(p->next); }
 		break;
 
 	case PROCDECL: /* scan for symbols */
@@ -86,52 +111,52 @@ void mk_symboltable(tree *p)
 	    break;
 
 	case VARS: 
-		mk_symboltable(p->child1);
-		if (p->next != NULL) { mk_symboltable(p->next); }
+		start_symboltable(p->child1);
+		if (p->next != NULL) { start_symboltable(p->next); }
 		break;
 
 	case VARS_TAIL:
-		if (p->next != NULL) { mk_symboltable(p->next); }
+		if (p->next != NULL) { start_symboltable(p->next); }
 		break;
 
 	case DECLS: 
-		mk_symboltable(p->child1);
-		if (p->next != NULL) { mk_symboltable(p->next); }
+		start_symboltable(p->child1);
+		if (p->next != NULL) { start_symboltable(p->next); }
 		break;
 
 	case ARGS:
-		mk_symboltable(p->child1);
-		if (p->next != NULL) { mk_symboltable(p->next); }
+		start_symboltable(p->child1);
+		if (p->next != NULL) { start_symboltable(p->next); }
 		break;
 
 	case ARGS_TAIL:
-		if (p->next != NULL) { mk_symboltable(p->next); }
+		if (p->next != NULL) { start_symboltable(p->next); }
 		break;
 
 	case F_CALL:
-		mk_symboltable(p->child1);
-		if (p->next != NULL) { mk_symboltable(p->next); }
+		start_symboltable(p->child1);
+		if (p->next != NULL) { start_symboltable(p->next); }
 		break;
 
 	case STMTS:
-		mk_symboltable(p->child1);
-		if (p->next != NULL) { mk_symboltable(p->next); }
+		start_symboltable(p->child1);
+		if (p->next != NULL) { start_symboltable(p->next); }
 		break;
 
 	case ASSIGNSTMT:
-		mk_symboltable(p->child1);
-		mk_symboltable(p->child2);
+		start_symboltable(p->child1);
+		start_symboltable(p->child2);
 		break;
 
 	case READSTMT:
-		mk_symboltable(p->child1);
+		start_symboltable(p->child1);
 		break;
 
 	case WRITESTMT:
-		mk_symboltable(p->child1);
+		start_symboltable(p->child1);
 		break;
 	} /* end select case */
-} /* end build symbol table */
+} /* end start symbol table */
 
 int symbol_find(char *name)
 /*	Find index of symbol table entry, -1 if not found */
@@ -157,6 +182,8 @@ int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
 	symbol_table[n_symbol_table].type = entry_type;
 	symbol_table[n_symbol_table].local_to = strdup(local_to);
 	symbol_table[n_symbol_table].num_args = num_args;
+	symbol_table[n_symbol_table].fp_offset = 0;
+	symbol_table[n_symbol_table].base_addr_offset = 0;
 	return n_symbol_table++;
 }
 

@@ -9,6 +9,8 @@ extern void	symbol_declare(int);
 /* extern void     symbolscan(tree *, int, char *, int); */  
 extern void     print_symboltable(void);
 /* extern int      count_func_args(tree *); */
+extern void     mk_symboltable(tree *);
+extern void     start_symboltable(tree *);
 
 extern int	symbol_find(char *);
 extern char*    symbol_name(int);
