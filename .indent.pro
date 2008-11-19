@@ -1,0 +1,1 @@
+-bad -bap -l80 -br -nce -cli0 -npcs -ss -npsl -nbc -ncs -bs -di1 -i4 -lp -ip4 -ts4 -sob
