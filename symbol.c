@@ -90,20 +90,6 @@ void start_symboltable(tree *p)
 	    if (p->next1 != NULL) { start_symboltable(p->next1); } /* proc list */
 	    break;
 
-	case WHILE_STMT:
-		if (p->next != NULL) { start_symboltable(p->next); }
-		break;
-
-	case IFTHENELSE_STMT:
-		if (p->next != NULL) { start_symboltable(p->next); }
-		if (p->next1 != NULL) { start_symboltable(p->next1); }
-		break;
-
-	case PROCS:
-		start_symboltable(p->child1);
-		if (p->next != NULL) { start_symboltable(p->next); }
-		break;
-
 	case PROCDECL: /* scan for symbols */
 	    if (p->child1 != NULL) { symbolscan(p->child1, ROUTINE, "*", count_func_args(p->next)); } /* procedure name */
 	    if (p->next != NULL) { symbolscan(p->next, VARIABLE, p->child1->nodeName, 0); } /* arg variable list */
@@ -111,50 +97,23 @@ void start_symboltable(tree *p)
 	    break;
 
 	case VARS: 
-		start_symboltable(p->child1);
-		if (p->next != NULL) { start_symboltable(p->next); }
-		break;
-
 	case VARS_TAIL:
-		if (p->next != NULL) { start_symboltable(p->next); }
-		break;
-
 	case DECLS: 
-		start_symboltable(p->child1);
-		if (p->next != NULL) { start_symboltable(p->next); }
-		break;
-
 	case ARGS:
-		start_symboltable(p->child1);
-		if (p->next != NULL) { start_symboltable(p->next); }
-		break;
-
 	case ARGS_TAIL:
-		if (p->next != NULL) { start_symboltable(p->next); }
-		break;
-
 	case F_CALL:
-		start_symboltable(p->child1);
-		if (p->next != NULL) { start_symboltable(p->next); }
-		break;
-
 	case STMTS:
-		start_symboltable(p->child1);
-		if (p->next != NULL) { start_symboltable(p->next); }
-		break;
-
 	case ASSIGNSTMT:
-		start_symboltable(p->child1);
-		start_symboltable(p->child2);
-		break;
-
 	case READSTMT:
-		start_symboltable(p->child1);
-		break;
-
 	case WRITESTMT:
-		start_symboltable(p->child1);
-		break;
+	case IFTHENELSE_STMT:
+	case PROCS:
+	case WHILE_STMT:
+	    if (p->next1 != NULL) { start_symboltable(p->next1); }
+	    if (p->child2 != NULL) { start_symboltable(p->child2); }
+	    if (p->next != NULL) { start_symboltable(p->next); }
+	    if (p->child1 != NULL) { start_symboltable(p->child1); }
+	    break;
 	} /* end select case */
 } /* end start symbol table */
 
