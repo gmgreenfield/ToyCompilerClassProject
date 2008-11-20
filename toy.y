@@ -265,8 +265,11 @@ term	: NUMBER
 var	: NAME
 		{
 		tree *p = (tree*) nodealloc(ID);
-		p->nodeName = (char*) malloc(strlen(yytext) * sizeof(char));
-		strcpy(p->nodeName,yytext); 
+		/* commented code below was causing small error in pretty printing with ')' showing
+		   up at the end of certain strings */
+		/* p->nodeName = (char*) malloc(strlen(yytext) * sizeof(char)); */
+		/* strcpy(p->nodeName,yytext); */
+		p->nodeName = strdup(yytext);
 		$$	= p;
 		}
 	;
