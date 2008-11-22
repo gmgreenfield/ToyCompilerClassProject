@@ -1,20 +1,16 @@
-declare temp;
-declare test;
-declare foobar;
-
-proc readand (x, y, z) {
+proc readandwrite (x, y, z ) {
      read x;
      read y;
      write y + z;
 }
 
-proc test ( foo, bar, baz ) {
+proc main ( foo, bar, baz ) {
      foo = baz;
      baz = bar;
      bar = foo;
 }
 
-proc main ( arg1, arg2 ) {
+proc test ( arg1, arg2 ) {
      call test ( arg1, arg2, arg1 );
      call readandwrite ( temp, test, foobar );
 }

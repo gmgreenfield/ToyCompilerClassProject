@@ -66,7 +66,7 @@ void mk_symboltable(tree *p) {
 
     /* global variables */
     for(i = 0; i < n_symbol_table; i++) {
-	if(symbol_table[i].type == VARIABLE && strcmp(symbol_table[i].local_to, "*") == 0)
+	if(symbol_table[i].type == VARIABLE && strcmp(symbol_table[i].local_to, "*global*") == 0)
 	    symbol_table[i].base_addr_offset = base_cnt++;
     }
     base_cnt = 0;
@@ -85,13 +85,13 @@ void mk_symboltable(tree *p) {
 void start_symboltable(tree *p)
 {
 	switch (p->nodeTag) {
-	case PROGRAM: /* scan for symbols */
-	    if (p->next != NULL) { symbolscan(p->next, VARIABLE, "*", 0); } /* decl list */
+	case PROGRAM:
+	    if (p->next != NULL) { symbolscan(p->next, VARIABLE, "*global*", 0); } /* decl list */
 	    if (p->next1 != NULL) { start_symboltable(p->next1); } /* proc list */
 	    break;
 
-	case PROCDECL: /* scan for symbols */
-	    if (p->child1 != NULL) { symbolscan(p->child1, ROUTINE, "*", count_func_args(p->next)); } /* procedure name */
+	case PROCDECL:
+	    if (p->child1 != NULL) { symbolscan(p->child1, ROUTINE, "*n/a*", count_func_args(p->next)); } /* procedure name */
 	    if (p->next != NULL) { symbolscan(p->next, VARIABLE, p->child1->nodeName, 0); } /* arg variable list */
 	    if (p->next1 != NULL) { symbolscan(p->next1, VARIABLE, p->child1->nodeName, 0); } /* proc body decl list */
 	    break;
@@ -117,6 +117,51 @@ void start_symboltable(tree *p)
 	} /* end select case */
 } /* end start symbol table */
 
+void static_checks(tree *p) {
+    /* -no undeclared variables
+       -procedure calls need correct number of args
+       -no re-declaration of variables
+       -must have a procedure called main
+       -no procedure re-declarations */
+    int i, j, err = 0;
+    
+    /* see if theres a procedure called main */
+    if(symbol_find("main") == -1) {
+	fprintf(stderr, "static_checks(): Program is missing a required routine called 'main'.\n");
+	err++;
+	exit(1);
+    }
+    /* see if any routines have duplicate names */
+    for(i=0; i<n_symbol_table; i++) {
+	if(symbol_table[i].type == ROUTINE) {
+	    for(j=0; j<n_symbol_table; j++) {
+		if(symbol_table[j].type == ROUTINE && i != j && (strcmp(symbol_table[i].name, symbol_table[j].name) == 0)) {
+		    fprintf(stderr, "static_checks(): Program has multiple routines with the same name of '%s'.\n", symbol_table[j].name);
+		    err++;
+		    exit(1);
+		} /* if */
+	    } /* for j */
+	} /* if */
+    } /* for i */
+    /* see if any variables within the same scope have duplicate names */
+    for(i=0; i<n_symbol_table; i++) {
+	if(symbol_table[i].type == VARIABLE && strcmp(symbol_table[i].local_to, "*n/a*") != 0) {
+	    for(j=0; j<n_symbol_table; j++) {
+		if(symbol_table[j].type == VARIABLE && strcmp(symbol_table[j].local_to, "*n/a*") != 0 && i != j) {
+		    if(strcmp(symbol_table[i].name, symbol_table[j].name) == 0 && strcmp(symbol_table[i].local_to, symbol_table[j].local_to) == 0) {
+			printf("static_checks(): variables with the duplicate name of '%s' are both within the scope of '%s'.\n",
+			       symbol_table[i].name, symbol_table[j].local_to);
+			err++;
+			exit(1);
+		    } /* if */
+		} /* if */
+	    } /* for j */
+	} /* if */
+    } /* for i */
+    
+    return;
+}
+
 int symbol_find(char *name)
 /*	Find index of symbol table entry, -1 if not found */
 {
@@ -137,7 +182,7 @@ int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
 		exit(1);
 	}
 	symbol_table[n_symbol_table].name = strdup(name);
-	symbol_table[n_symbol_table].declared = 0;
+	symbol_table[n_symbol_table].declared = 1;
 	symbol_table[n_symbol_table].type = entry_type;
 	symbol_table[n_symbol_table].local_to = strdup(local_to);
 	symbol_table[n_symbol_table].num_args = num_args;

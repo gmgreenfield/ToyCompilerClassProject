@@ -423,6 +423,7 @@ main(int argc,char *argv[])
      pretty(root);
      mk_symboltable(root);
      print_symboltable();
+     static_checks(root);
      return 1;
 }
 

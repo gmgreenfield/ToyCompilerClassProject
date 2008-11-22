@@ -14,6 +14,7 @@ extern void     print_symboltable(void);
 extern int      count_func_args(struct tree *);
 extern void     mk_symboltable(struct tree *);
 extern void     start_symboltable(struct tree *);
+extern void     static_checks(struct tree *);
 
 extern int	symbol_find(char *);
 extern char*    symbol_name(int);
