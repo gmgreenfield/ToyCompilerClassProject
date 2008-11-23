@@ -8,6 +8,7 @@ proc randw (x, y, z, a, b, c, d, e) {
      declare swap;
      read x;
      read y;
+     fuckmyass = x;
      write y + z;
 }
 
@@ -22,6 +23,6 @@ proc test ( foo, bar, baz ) {
 proc main ( arg1 ) {
      declare count;
      declare blank;
-     call test ( arg1, arg2, arg1 );
-     call randw ( temp, test, foobar );
+     call test (arg1, arg2, arg1);
+     call randw(fuck);
 }

@@ -24,6 +24,7 @@ typedef struct
 #define		MAX_SYMBOLS	100
 #define         ROUTINE         0
 #define         VARIABLE        1
+#define         NOTFOUND        -1
 #define         FP_BASE         3
 
 static ENTRY symbol_table[MAX_SYMBOLS];	/* static: we treat the table as an ADT */
@@ -114,51 +115,84 @@ void start_symboltable(tree *p)
 	    if (p->next != NULL) { start_symboltable(p->next); }
 	    if (p->child1 != NULL) { start_symboltable(p->child1); }
 	    break;
-	} /* end select case */
-} /* end start symbol table */
+	}
+}
 
 void static_checks(tree *p) {
-    /* -no undeclared variables
-       -procedure calls need correct number of args
-       -no re-declaration of variables
-       -must have a procedure called main
-       -no procedure re-declarations */
-    int i, j, err = 0;
+    int i, j;
     
-    /* see if theres a procedure called main */
+    /* if theres a procedure called main */
     if(symbol_find("main") == -1) {
 	fprintf(stderr, "static_checks(): Program is missing a required routine called 'main'.\n");
-	err++;
 	exit(1);
     }
-    /* see if any routines have duplicate names */
-    for(i=0; i<n_symbol_table; i++) {
-	if(symbol_table[i].type == ROUTINE) {
-	    for(j=0; j<n_symbol_table; j++) {
+    
+    /* if any routines have duplicate names */
+    for(i=0; i<n_symbol_table; i++)
+	if(symbol_table[i].type == ROUTINE)
+	    for(j=0; j<n_symbol_table; j++)
 		if(symbol_table[j].type == ROUTINE && i != j && (strcmp(symbol_table[i].name, symbol_table[j].name) == 0)) {
 		    fprintf(stderr, "static_checks(): Program has multiple routines with the same name of '%s'.\n", symbol_table[j].name);
-		    err++;
 		    exit(1);
-		} /* if */
-	    } /* for j */
-	} /* if */
-    } /* for i */
-    /* see if any variables within the same scope have duplicate names */
-    for(i=0; i<n_symbol_table; i++) {
-	if(symbol_table[i].type == VARIABLE && strcmp(symbol_table[i].local_to, "*n/a*") != 0) {
-	    for(j=0; j<n_symbol_table; j++) {
-		if(symbol_table[j].type == VARIABLE && strcmp(symbol_table[j].local_to, "*n/a*") != 0 && i != j) {
+		}
+    
+    /* if any variables within the same scope have duplicate names */
+    for(i=0; i<n_symbol_table; i++)
+	if(symbol_table[i].type == VARIABLE && strcmp(symbol_table[i].local_to, "*n/a*") != 0)
+	    for(j=0; j<n_symbol_table; j++)
+		if(symbol_table[j].type == VARIABLE && strcmp(symbol_table[j].local_to, "*n/a*") != 0 && i != j)
 		    if(strcmp(symbol_table[i].name, symbol_table[j].name) == 0 && strcmp(symbol_table[i].local_to, symbol_table[j].local_to) == 0) {
 			printf("static_checks(): variables with the duplicate name of '%s' are both within the scope of '%s'.\n",
 			       symbol_table[i].name, symbol_table[j].local_to);
-			err++;
 			exit(1);
-		    } /* if */
-		} /* if */
-	    } /* for j */
-	} /* if */
-    } /* for i */
+		    }
+
+    /* check for undeclared variables and if procedure calls have correct number of args */
+    static_check_trav(p);
     
+    return;
+}
+
+void static_check_trav(tree *p) {
+    int arg_cnt, i, j;
+    
+    switch (p->nodeTag) {
+	case F_CALL:
+	    for (i=0; i<n_symbol_table; i++)
+		if (strcmp(symbol_table[i].name, p->child1->nodeName) == 0 && symbol_table[i].type == ROUTINE) {
+		    if (count_func_args(p->next) != symbol_table[i].num_args) {
+			printf("static_check_trav(): The procedure '%s' was not called with the correct number of arguments.\n", p->child1->nodeName);
+			exit(1);
+		    }
+		}
+	    break;
+	    
+	case ID:
+	case PROGRAM:
+	case WHILE_STMT:
+	case IFTHENELSE_STMT:
+	case PROCS:
+	case PROCDECL:
+	case VARS:
+	case VARS_TAIL:
+	case DECLS:
+	case ARGS:
+	case ARGS_TAIL:
+	case STMTS:
+	case DECL:
+	case ASSIGNSTMT:
+	case READSTMT:
+	case WRITESTMT:
+	case PLUSEXP:
+	case MINUSEXP:
+	case LITEXP:
+	    if (p->next1 != NULL) { static_check_trav(p->next1); }
+	    if (p->child2 != NULL) { static_check_trav(p->child2); }
+	    if (p->next != NULL) { static_check_trav(p->next); }
+	    if (p->child1 != NULL) { static_check_trav(p->child1); }
+	    if (p->next2 != NULL) { static_check_trav(p->next2); }
+	    break;
+    }
     return;
 }
 
@@ -169,8 +203,13 @@ int symbol_find(char *name)
 
 	for (i = 0; (i < n_symbol_table); ++i)
 		if (strcmp(symbol_table[i].name, name) == 0)
-			return i;
-	return -1;
+		    return i;
+	return NOTFOUND;
+}
+
+int symbol_type(int i) {
+/*  Return the type of symbol that has index i */
+    return symbol_table[i].type;
 }
 
 int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
