@@ -3,12 +3,12 @@
 *	This is a trivial example: the only information kept
 *       is the name, the token type: READ, WRITE or NAME
 */
-#include	<stdio.h>			/* for (f)printf(), std{out,int} */
-#include	<string.h>			/* for strcmp, strdup & friends */
-#include	<stdlib.h>			/* for exit */
+#include        <stdio.h>			/* for (f)printf(), std{out,int} */
+#include        <string.h>			/* for strcmp, strdup & friends */
+#include        <stdlib.h>			/* for exit */
 #include        "globals.h"
-#include	"toy.tab.h"			/* token type definitions from .y file */
-#include	"symbol.h"
+#include        "toy.tab.h"			/* token type definitions from .y file */
+#include        "symbol.h"
 
 typedef struct
 {
@@ -76,9 +76,9 @@ void mk_symboltable(tree *p) {
 	if(symbol_table[i].type == ROUTINE) {
 	    for(j = i + 1; symbol_table[j].type != ROUTINE; j++) {
 		symbol_table[j].fp_offset = FP_BASE + base_cnt++;
-	    } /* for */
+	    }
 	    base_cnt = 0;
-	} /* if */
+	}
     
     return;
 }
@@ -186,8 +186,8 @@ int var_define_check(tree *p) {
          break;
 
 	 case VARS:
-         case VARS_TAIL:
-         case DECLS:
+	 case VARS_TAIL:
+	 case DECLS:
 	 case DECL:
 	 case LITEXP:       
 	      break;
@@ -204,13 +204,13 @@ int var_define_check(tree *p) {
          break;
 
          case PROCS:
-	     var_define_check(p->child1);
-	     if (p->next != NULL) { var_define_check(p->next); }
-	 break;
+	      var_define_check(p->child1);
+	      if (p->next != NULL) { var_define_check(p->next); }
+	      break;
 
          case PROCDECL:
 	      if (p->next2 != NULL) { var_define_check(p->next2); }
-	 break;
+	      break;
 	      
          case ARGS:
 	      var_define_check(p->child1);
