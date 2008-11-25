@@ -6,7 +6,6 @@
 #include	<stdio.h>			/* for (f)printf(), std{out,int} */
 #include	<string.h>			/* for strcmp, strdup & friends */
 #include	<stdlib.h>			/* for exit */
-#include        <ctype.h>                       /* for isdigit() */
 #include        "globals.h"
 #include	"toy.tab.h"			/* token type definitions from .y file */
 #include	"symbol.h"
@@ -73,14 +72,13 @@ void mk_symboltable(tree *p) {
     
     base_cnt = 0;
     /* local variables */
-    for(i = 0; i < n_symbol_table; i++) {
+    for(i = 0; i < n_symbol_table; i++)
 	if(symbol_table[i].type == ROUTINE) {
 	    for(j = i + 1; symbol_table[j].type != ROUTINE; j++) {
 		symbol_table[j].fp_offset = FP_BASE + base_cnt++;
 	    } /* for */
 	    base_cnt = 0;
 	} /* if */
-    } /* for */
     
     return;
 }
@@ -99,19 +97,7 @@ void start_symboltable(tree *p)
 	    if (p->next1 != NULL) { symbolscan(p->next1, VARIABLE, p->child1->nodeName, 0); } /* proc body decl list */
 	    break;
 
-	case VARS: 
-	case VARS_TAIL:
-	case DECLS: 
-	case ARGS:
-	case ARGS_TAIL:
-	case F_CALL:
-	case STMTS:
-	case ASSIGNSTMT:
-	case READSTMT:
-	case WRITESTMT:
-	case IFTHENELSE_STMT:
-	case PROCS:
-	case WHILE_STMT:
+	default:
 	    if (p->next1 != NULL) { start_symboltable(p->next1); }
 	    if (p->child2 != NULL) { start_symboltable(p->child2); }
 	    if (p->next != NULL) { start_symboltable(p->next); }
@@ -199,6 +185,13 @@ int var_define_check(tree *p) {
 	     if (p->next1 != NULL) { var_define_check(p->next1); }
          break;
 
+	 case VARS:
+         case VARS_TAIL:
+         case DECLS:
+	 case DECL:
+	 case LITEXP:       
+	      break;
+
          case WHILE_STMT:
 	     var_define_check(p->child1);
 	     if (p->next != NULL) { var_define_check(p->next); }
@@ -218,15 +211,6 @@ int var_define_check(tree *p) {
          case PROCDECL:
 	      if (p->next2 != NULL) { var_define_check(p->next2); }
 	 break;
-
-         case VARS:
-	      break;
-
-         case VARS_TAIL:
-	      break;
-
-         case DECLS:
-	      break;
 	      
          case ARGS:
 	      var_define_check(p->child1);
@@ -244,9 +228,6 @@ int var_define_check(tree *p) {
          case STMTS:
 	      var_define_check(p->child1);
 	      if (p->next != NULL) { var_define_check(p->next); }
-              break;
-
-         case DECL:
               break;
 
          case ASSIGNSTMT:
@@ -272,11 +253,8 @@ int var_define_check(tree *p) {
               var_define_check(p->child2);                 
               break;
 
-         case LITEXP:       
-              break;
-
          case ID:
-	      if(symbol_find(p->nodeName, VARIABLE) == NOTFOUND) {
+	     if(symbol_find(p->nodeName, VARIABLE) == NOTFOUND) { /* scan identifiers and check if they exist in symbol table */
 		  printf("var_define_check(): The variable '%s' was not declared.\n", p->nodeName);
 		  err++;
 	      }
@@ -307,7 +285,7 @@ int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
 /* Routine is 0, variable is 1 for the entry_type */
 {
 	if (n_symbol_table >= MAX_SYMBOLS) {
-		fprintf(stderr, "Symbol table overflow (%d) entries\n", n_symbol_table);
+		fprintf(stderr, "Symbol table overflow (%d) entries\nExited abnormally.\n", n_symbol_table);
 		exit(1);
 	}
 	symbol_table[n_symbol_table].name = strdup(name);
