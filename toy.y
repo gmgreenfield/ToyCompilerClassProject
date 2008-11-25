@@ -265,12 +265,8 @@ term	: NUMBER
 var	: NAME
 		{
 		tree *p = (tree*) nodealloc(ID);
-		/* commented code below was causing small error in pretty printing with ')' showing
-		   up at the end of certain strings */
-		/* p->nodeName = (char*) malloc(strlen(yytext) * sizeof(char)); */
-		/* strcpy(p->nodeName,yytext); */
 		p->nodeName = strdup(yytext);
-		$$	= p;
+		$$ = p;
 		}
 	;
 %%
@@ -302,7 +298,6 @@ void prettystmts (tree *p) {
 
          case PROCS:
 	   prettystmts(p->child1);
-	   //printf(" ");
 	   if (p->next != NULL) { prettystmts(p->next); }
 	 break;
 
@@ -424,6 +419,7 @@ main(int argc,char *argv[])
      mk_symboltable(root);
      print_symboltable();
      static_checks(root);
+     code_gen(root);
      return 1;
 }
 

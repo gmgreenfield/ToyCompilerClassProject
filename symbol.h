@@ -15,9 +15,10 @@ extern int      count_func_args(struct tree *);
 extern void     mk_symboltable(struct tree *);
 extern void     start_symboltable(struct tree *);
 extern void     static_checks(struct tree *);
-extern void     static_check_trav(struct tree *);
+extern int      proc_call_check(struct tree *);
+extern int      var_define_check(struct tree *);
 
-extern int	symbol_find(char *);
+extern int	symbol_find(char *, int);
 extern char*    symbol_name(int);
 extern int	symbol_type(int);
 extern int 	symbol_declared(int);

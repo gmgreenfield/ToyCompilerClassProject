@@ -6,6 +6,7 @@
 #include	<stdio.h>			/* for (f)printf(), std{out,int} */
 #include	<string.h>			/* for strcmp, strdup & friends */
 #include	<stdlib.h>			/* for exit */
+#include        <ctype.h>                       /* for isdigit() */
 #include        "globals.h"
 #include	"toy.tab.h"			/* token type definitions from .y file */
 #include	"symbol.h"
@@ -36,8 +37,8 @@ void print_symboltable(void)
     printf("symboltable...\n");
     for (i = 0; i < n_symbol_table; i++) {
 	printf("name:%15s type:%9s local_to:%15s declared:%d num_args:%2d fp_offset:%2d base_addr_offset:%2d\n", symbol_table[i].name,
-	       symbol_table[i].type == ROUTINE ? "routine" : "variable", symbol_table[i].local_to,
-	       symbol_table[i].declared, symbol_table[i].num_args, symbol_table[i].fp_offset, symbol_table[i].base_addr_offset);
+	       symbol_table[i].type == ROUTINE ? "routine" : "variable", symbol_table[i].local_to, symbol_table[i].declared,
+	       symbol_table[i].num_args, symbol_table[i].fp_offset, symbol_table[i].base_addr_offset);
     }
     return;
 }
@@ -57,19 +58,19 @@ int count_func_args(tree *p) {
         cnt++;
         p = p->next->next;
     }
-    return cnt + 1;
+    return (cnt + 1);
 }
 
 void mk_symboltable(tree *p) {
     int i, j, base_cnt = 0;
     
     start_symboltable(p);
-
     /* global variables */
     for(i = 0; i < n_symbol_table; i++) {
 	if(symbol_table[i].type == VARIABLE && strcmp(symbol_table[i].local_to, "*global*") == 0)
 	    symbol_table[i].base_addr_offset = base_cnt++;
     }
+    
     base_cnt = 0;
     /* local variables */
     for(i = 0; i < n_symbol_table; i++) {
@@ -80,6 +81,7 @@ void mk_symboltable(tree *p) {
 	    base_cnt = 0;
 	} /* if */
     } /* for */
+    
     return;
 }
 
@@ -119,12 +121,12 @@ void start_symboltable(tree *p)
 }
 
 void static_checks(tree *p) {
-    int i, j;
+    int i, j, err = 0;
     
     /* if theres a procedure called main */
-    if(symbol_find("main") == -1) {
+    if(symbol_find("main", ROUTINE) == -1) {
 	fprintf(stderr, "static_checks(): Program is missing a required routine called 'main'.\n");
-	exit(1);
+	err++;
     }
     
     /* if any routines have duplicate names */
@@ -133,7 +135,7 @@ void static_checks(tree *p) {
 	    for(j=0; j<n_symbol_table; j++)
 		if(symbol_table[j].type == ROUTINE && i != j && (strcmp(symbol_table[i].name, symbol_table[j].name) == 0)) {
 		    fprintf(stderr, "static_checks(): Program has multiple routines with the same name of '%s'.\n", symbol_table[j].name);
-		    exit(1);
+		    err++;
 		}
     
     /* if any variables within the same scope have duplicate names */
@@ -144,77 +146,165 @@ void static_checks(tree *p) {
 		    if(strcmp(symbol_table[i].name, symbol_table[j].name) == 0 && strcmp(symbol_table[i].local_to, symbol_table[j].local_to) == 0) {
 			printf("static_checks(): variables with the duplicate name of '%s' are both within the scope of '%s'.\n",
 			       symbol_table[i].name, symbol_table[j].local_to);
-			exit(1);
+			err++;
 		    }
 
-    /* check for undeclared variables and if procedure calls have correct number of args */
-    static_check_trav(p);
+    /* check if prodecure call has correct number of args */
+    err += proc_call_check(p);
+    /* check if the variables that are being used are defined */ 
+    err += var_define_check(p);
+
+    printf("%d Errors from static checks have been found.\n", err);
+
+    if(err > 0) {
+	printf("Exited abnormally.\n");
+	exit(1);
+    }
     
     return;
 }
 
-void static_check_trav(tree *p) {
-    int arg_cnt, i, j;
+int proc_call_check(tree *p) {
+    int i;
+    static int err = 0;
     
     switch (p->nodeTag) {
-	case F_CALL:
+	case F_CALL: /* check if procedure calls have correct number of args*/
 	    for (i=0; i<n_symbol_table; i++)
-		if (strcmp(symbol_table[i].name, p->child1->nodeName) == 0 && symbol_table[i].type == ROUTINE) {
+		if (strcmp(symbol_table[i].name, p->child1->nodeName) == 0 && symbol_table[i].type == ROUTINE)
 		    if (count_func_args(p->next) != symbol_table[i].num_args) {
 			printf("static_check_trav(): The procedure '%s' was not called with the correct number of arguments.\n", p->child1->nodeName);
-			exit(1);
+			err++;
 		    }
-		}
 	    break;
-	    
-	case ID:
-	case PROGRAM:
-	case WHILE_STMT:
-	case IFTHENELSE_STMT:
-	case PROCS:
-	case PROCDECL:
-	case VARS:
-	case VARS_TAIL:
-	case DECLS:
-	case ARGS:
-	case ARGS_TAIL:
-	case STMTS:
-	case DECL:
-	case ASSIGNSTMT:
-	case READSTMT:
-	case WRITESTMT:
-	case PLUSEXP:
-	case MINUSEXP:
-	case LITEXP:
-	    if (p->next1 != NULL) { static_check_trav(p->next1); }
-	    if (p->child2 != NULL) { static_check_trav(p->child2); }
-	    if (p->next != NULL) { static_check_trav(p->next); }
-	    if (p->child1 != NULL) { static_check_trav(p->child1); }
-	    if (p->next2 != NULL) { static_check_trav(p->next2); }
+	      
+	default:
+	    if (p->next1 != NULL) { proc_call_check(p->next1); }
+	    if (p->child2 != NULL) { proc_call_check(p->child2); }
+	    if (p->next != NULL) { proc_call_check(p->next); }
+	    if (p->child1 != NULL) { proc_call_check(p->child1); }
+	    if (p->next2 != NULL) { proc_call_check(p->next2); }
 	    break;
     }
-    return;
+    
+    return err;
 }
 
-int symbol_find(char *name)
-/*	Find index of symbol table entry, -1 if not found */
+int var_define_check(tree *p) {
+     static int err = 0;
+     
+     switch(p->nodeTag) {
+         case PROGRAM:
+	     if (p->next != NULL) { var_define_check(p->next); }
+	     if (p->next1 != NULL) { var_define_check(p->next1); }
+         break;
+
+         case WHILE_STMT:
+	     var_define_check(p->child1);
+	     if (p->next != NULL) { var_define_check(p->next); }
+         break;
+
+         case IFTHENELSE_STMT:
+	     var_define_check(p->child1);
+	     if (p->next != NULL) { var_define_check(p->next); }
+	     if (p->next1 != NULL) { var_define_check(p->next1); }
+         break;
+
+         case PROCS:
+	     var_define_check(p->child1);
+	     if (p->next != NULL) { var_define_check(p->next); }
+	 break;
+
+         case PROCDECL:
+	      if (p->next2 != NULL) { var_define_check(p->next2); }
+	 break;
+
+         case VARS:
+	      break;
+
+         case VARS_TAIL:
+	      break;
+
+         case DECLS:
+	      break;
+	      
+         case ARGS:
+	      var_define_check(p->child1);
+	      if (p->next != NULL) { var_define_check(p->next); }
+              break;
+
+         case ARGS_TAIL:
+	      if (p->next != NULL) { var_define_check(p->next); }
+              break;
+
+         case F_CALL:
+              if (p->next != NULL) { var_define_check(p->next); }
+              break;
+
+         case STMTS:
+	      var_define_check(p->child1);
+	      if (p->next != NULL) { var_define_check(p->next); }
+              break;
+
+         case DECL:
+              break;
+
+         case ASSIGNSTMT:
+              var_define_check(p->child1);         
+              var_define_check(p->child2);
+              break;
+
+         case READSTMT:
+              var_define_check(p->child1);                       
+              break;
+
+         case WRITESTMT:
+              var_define_check(p->child1);                       
+              break;
+
+         case PLUSEXP:                  
+              var_define_check(p->child1);       
+              var_define_check(p->child2);                 
+              break;
+
+         case MINUSEXP:                   
+              var_define_check(p->child1);         
+              var_define_check(p->child2);                 
+              break;
+
+         case LITEXP:       
+              break;
+
+         case ID:
+	      if(symbol_find(p->nodeName, VARIABLE) == NOTFOUND) {
+		  printf("var_define_check(): The variable '%s' was not declared.\n", p->nodeName);
+		  err++;
+	      }
+              break;
+     }
+     
+     return err;
+}
+
+int symbol_find(char *name, int type)
+/* Find index of symbol table entry, -1 if not found */
 {
 	int i;
 
 	for (i = 0; (i < n_symbol_table); ++i)
-		if (strcmp(symbol_table[i].name, name) == 0)
+		if (strcmp(symbol_table[i].name, name) == 0 && symbol_table[i].type == type)
 		    return i;
 	return NOTFOUND;
 }
 
 int symbol_type(int i) {
-/*  Return the type of symbol that has index i */
+/* Return the type of symbol that has index i */
     return symbol_table[i].type;
 }
 
 int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
-/*	Insert new symbol with a given type into symbol table, returns index new value */
-/*      Routine is 0, variable is 1 for the entry_type */
+/* Insert new symbol with a given type into symbol table, returns index new value */
+/* Routine is 0, variable is 1 for the entry_type */
 {
 	if (n_symbol_table >= MAX_SYMBOLS) {
 		fprintf(stderr, "Symbol table overflow (%d) entries\n", n_symbol_table);
@@ -231,19 +321,19 @@ int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
 }
 
 void symbol_declare(int i)
-/*	Mark a symbol in the table as declared */
+/* Mark a symbol in the table as declared */
 {
 	symbol_table[i].declared = 1;
 }
 
 int symbol_declared(int i)
-/*	Return declared property of symbol */
+/* Return declared property of symbol */
 {
 	return symbol_table[i].declared;
 }
 
 char *symbol_name(int i)
-/*	Return declared property of symbol */
+/* Return declared property of symbol */
 {
 	return symbol_table[i].name;
 }
