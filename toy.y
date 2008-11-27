@@ -413,7 +413,7 @@ main(int argc,char *argv[])
      tree *root;
      
      if (argc != 2) {
-	fprintf(stderr,"Usage: %s base_file_name\n", argv[0]);
+	fprintf(stderr,"Usage: %s filename.ty\n", argv[0]);
 	exit(1);
      }
 
@@ -423,6 +423,11 @@ main(int argc,char *argv[])
 	former still works */
      yyin = fopen(argv[1], "r");
 
+     if(yyin == NULL) {
+	 fprintf(stderr, "failed to open %s\n", argv[1]);
+	 return EXIT_FAILURE;
+     }
+     
      /* base = argv[1]; */
      root = (tree*)yyparse();
      /* pretty(root); */

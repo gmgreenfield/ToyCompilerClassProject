@@ -247,22 +247,30 @@ int var_define_check(tree *p) {
      return err;
 }
 
-int var_offset(int id) {
-    if (strcmp(symbol_table[id].local_to, "*global*") == 0) /* global variable */
-	return symbol_table[id].base_addr_offset;
-    else if (strcmp(symbol_table[id].local_to, "*n/a*") != 0) /* local variable */
-	return symbol_table[id].fp_offset;
-    else /* something else */
-	return NOTFOUND;
+int var_offset(char *name) {
+    int i;
+    for(i=0; i<n_symbol_table; i++) {
+	if(strcmp(symbol_table[i].name, name) == 0 && symbol_table[i].type == VARIABLE) {
+	    if(strcmp(symbol_table[i].local_to, "*global*") == 0) {
+		return symbol_table[i].base_addr_offset;
+	    } else {
+		return symbol_table[i].fp_offset;
+	    }
+	}
+    }
 }
 
-char *var_type(int id) {
-    if (strcmp(symbol_table[id].local_to, "*global*") == 0) /* global variable */
-	return "BP";
-    else if (strcmp(symbol_table[id].local_to, "*n/a*") != 0) /* local variable */
-	return "SP";
-    else
-	return NULL;
+char *var_type(char *name) {
+    int i;
+    for(i=0; i<n_symbol_table; i++) {
+	if(strcmp(symbol_table[i].name, name) == 0) {
+	    if(strcmp(symbol_table[i].local_to, "*global*") == 0) {
+		return "BP";
+	    } else {
+		return "SP";
+	    }
+	}
+    }
 }
 
 int symbol_find(char *name, int type)

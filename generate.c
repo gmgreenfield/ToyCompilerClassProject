@@ -89,41 +89,42 @@ void code_gen_trav(tree *p) {
               break;
 
          case DECL:
-	     //printf("declare %s",p->nodeName);
-              break;
+	      //printf("declare %s",p->nodeName);
+	      break;
 
          case ASSIGNSTMT:
-	      fprintf(fp, "(ASSIGN,");
               code_gen_trav(p->child1);         
               code_gen_trav(p->child2);
               break;
 	      
          case READSTMT:
-	     fprintf(fp, "(READI,M[");
-	     code_gen_trav(p->child1);
-	     fprintf(fp, "])\n");
-	     break;
+	      printf("(READI,M[");
+	      code_gen_trav(p->child1);
+	      printf("])\n");
+	      break;
 
          case WRITESTMT:
               code_gen_trav(p->child1);                       
               break;
 
-         case PLUSEXP:                 
+         case PLUSEXP:
+	      printf("(ADDI,");
               code_gen_trav(p->child1);         
               code_gen_trav(p->child2);                  
               break;
 
-         case MINUSEXP:                   
+         case MINUSEXP:
+	      printf("(SUBI,");
               code_gen_trav(p->child1);         
               code_gen_trav(p->child2);                  
               break;
 
          case LITEXP:
-	     fprintf(fp, "%d", p->nodeVal);
-	     break;
+	      printf("%d", p->nodeVal);
+	      break;
 
          case ID:
-	     fprintf(fp, "%s+%d", var_type(symbol_find(p->nodeName, VARIABLE)), var_offset(symbol_find(p->nodeName, VARIABLE)));
+	     printf("%s+%d", var_type(p->nodeName), var_offset(p->nodeName));
 	     break;
      }
     return;
