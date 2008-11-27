@@ -7,9 +7,6 @@
 #include        "symbol.h"
 #include        "generate.h"   
 
-extern ENTRY symbol_table[MAX_SYMBOLS];
-extern int n_symbol_table;
-
 static FILE *fp; /* local to within this file */
 
 void code_gen(tree *p) {
@@ -17,7 +14,8 @@ void code_gen(tree *p) {
     
     /* begin the actual process */
     code_gen_trav(p);
-    
+
+    /* the last line in the tuple code */
     fprintf(fp,"%s","(EXIT)\n");
     fclose(fp);
 
@@ -49,10 +47,10 @@ void code_gen_trav(tree *p) {
 	 break;
 
          case PROCDECL:
-	   code_gen_trav(p->child1);
-	   if (p->next != NULL) { code_gen_trav(p->next); }
-	   if (p->next1 != NULL) { code_gen_trav(p->next1); }
-	   if (p->next2 != NULL) { code_gen_trav(p->next2); }
+	      code_gen_trav(p->child1);
+	      if (p->next != NULL) { code_gen_trav(p->next); }
+	      if (p->next1 != NULL) { code_gen_trav(p->next1); }
+	      if (p->next2 != NULL) { code_gen_trav(p->next2); }
 	 break;
 
          case VARS:
@@ -93,39 +91,74 @@ void code_gen_trav(tree *p) {
 	      break;
 
          case ASSIGNSTMT:
-              code_gen_trav(p->child1);         
-              code_gen_trav(p->child2);
+	      if(p->child2->nodeTag == PLUSEXP || p->child2->nodeTag == MINUSEXP) {
+		  code_gen_trav(p->child2);
+		  fprintf(fp, "(ASSIGN,");
+		  code_gen_trav(p->child1);
+		  fprintf(fp, ",%s)\n", register_inc());
+	      } else {
+		  fprintf(fp, "(ASSIGN,");
+		  code_gen_trav(p->child1);
+		  fprintf(fp, ",");
+		  if(p->child2->nodeTag == ID) {
+		      fprintf(fp, "M[%s+%d]", var_type(p->child2->nodeName), var_offset(p->nodeName));
+		  } else if(p->child2->nodeTag == LITEXP) {
+		      fprintf(fp, "%d", p->child2->nodeName);
+		  }
+		  fprintf(fp, ")\n");
+              }
               break;
 	      
          case READSTMT:
-	      printf("(READI,M[");
+	      fprintf(fp, "(READI,M[");
 	      code_gen_trav(p->child1);
-	      printf("])\n");
+	      fprintf(fp, "])\n");
 	      break;
 
          case WRITESTMT:
-              code_gen_trav(p->child1);                       
+	      code_gen_trav(p->child1);                       
               break;
 
          case PLUSEXP:
-	      printf("(ADDI,");
-              code_gen_trav(p->child1);         
-              code_gen_trav(p->child2);                  
+	      fprintf(fp, "(ADDI,%s,", register_inc());
+	      code_gen_trav(p->child1);
+	      fprintf(fp, ",");
+	      code_gen_trav(p->child2);
+	      fprintf(fp, ")\n");
               break;
 
          case MINUSEXP:
-	      printf("(SUBI,");
-              code_gen_trav(p->child1);         
-              code_gen_trav(p->child2);                  
+              code_gen_trav(p->child1);
+              code_gen_trav(p->child2);
               break;
 
          case LITEXP:
-	      printf("%d", p->nodeVal);
+	      fprintf(fp, "%d", p->nodeVal);
 	      break;
 
          case ID:
-	     printf("%s+%d", var_type(p->nodeName), var_offset(p->nodeName));
-	     break;
+	      fprintf(fp, "%s+%d", var_type(p->nodeName), var_offset(p->nodeName));
+	      break;
      }
     return;
 }
+
+char *register_inc(void) {
+    /* start counting at 1 */
+    static int count = 1;
+    static int track = -1;
+
+    char *acc;
+    acc = (char *)malloc(sizeof(char)*10);
+
+    ++track;
+    if(track == 2) {
+        track = 0;
+        ++count;
+    }
+
+    sprintf(acc, "M%d", count);
+
+    return acc;
+}
+

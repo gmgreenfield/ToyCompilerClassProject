@@ -3,6 +3,7 @@
 
 void code_gen(struct tree *);
 void code_gen_trav(struct tree *);
+char *register_inc(void);
 
 #define OUTFILE    "out.ty" /* default name for the tuple code file */
 

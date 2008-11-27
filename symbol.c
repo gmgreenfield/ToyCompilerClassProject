@@ -10,8 +10,8 @@
 #include        "toy.tab.h"			/* token type definitions from .y file */
 #include        "symbol.h"
 
-ENTRY symbol_table[MAX_SYMBOLS];
-int n_symbol_table = 0;
+static ENTRY symbol_table[MAX_SYMBOLS];
+static int n_symbol_table = 0;
 
 void print_symboltable(void)
 {
@@ -267,7 +267,7 @@ char *var_type(char *name) {
 	    if(strcmp(symbol_table[i].local_to, "*global*") == 0) {
 		return "BP";
 	    } else {
-		return "SP";
+		return "FP";
 	    }
 	}
     }
