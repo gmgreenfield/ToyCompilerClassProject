@@ -5,8 +5,10 @@
 #include	<stdio.h>	/* for (f)printf() */
 #include	<stdlib.h>	/* for exit() */
 #include	<string.h>	/* for strlen(), strcpy() */
+#include        <unistd.h>      /* for getopt() */
 #include	"symbol.h"
 #include	"globals.h"
+#include	"generate.h"
 
 char		*base;		
 int		lineno	= 1;	/* number of current source line */
@@ -407,19 +409,28 @@ void pretty (tree *ast) {
 int
 main(int argc,char *argv[])
 {
+     extern FILE *yyin;
      tree *root;
-     if (argc != 2)
-	{
-	fprintf(stderr,"Usage: %s base_file_name\n",argv[0]);
+     
+     if (argc != 2) {
+	fprintf(stderr,"Usage: %s base_file_name\n", argv[0]);
 	exit(1);
-	}
-     base = argv[1];
-     root = (tree*) yyparse();
-     pretty(root);
+     }
+
+     /* can just use ./toy file.ty now
+	instead of ./toy file < file.ty
+	in the shell script tc.sh but the
+	former still works */
+     yyin = fopen(argv[1], "r");
+
+     /* base = argv[1]; */
+     root = (tree*)yyparse();
+     /* pretty(root); */
      mk_symboltable(root);
      print_symboltable();
      static_checks(root);
      code_gen(root);
+     
      return 1;
 }
 

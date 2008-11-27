@@ -6,7 +6,7 @@ proc randw (x, y, z) {
      declare count;
      declare temp;
      declare swap;
-     read x;
+     read foobar;
      read y;
 }
 
@@ -21,6 +21,6 @@ proc test ( foo, bar, baz ) {
 proc main ( arg1 ) {
      declare count;
      declare blank;
-     call test (arg1, arg2, arg1);
-     call randw(a, b, c);
+     call test (temp, test, foobar);
+     call randw(temp, test, foobar);
 }

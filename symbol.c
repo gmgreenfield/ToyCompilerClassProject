@@ -10,25 +10,8 @@
 #include        "toy.tab.h"			/* token type definitions from .y file */
 #include        "symbol.h"
 
-typedef struct
-{
-    char *name;
-    int declared;		        /* 1 if already declared, 0 else */
-    int type;				/* tells if its a routine or a variable */
-    char *local_to;			/* who the variable belongs to if in a proc, or null if its global */
-    int num_args;                       /* will be 0 in the case of a variable */
-    int fp_offset;                      /* variable is found at offset i from the frame pointer (fp and base offsets are mutually exclusive) */
-    int base_addr_offset;               /* variable is found at offset i from the constant base address*/
-} ENTRY;
-
-#define		MAX_SYMBOLS	100
-#define         ROUTINE         0
-#define         VARIABLE        1
-#define         NOTFOUND        -1
-#define         FP_BASE         3
-
-static ENTRY symbol_table[MAX_SYMBOLS];	/* static: we treat the table as an ADT */
-static int n_symbol_table = 0;	        /* number of entries in symbol table */
+ENTRY symbol_table[MAX_SYMBOLS];
+int n_symbol_table = 0;
 
 void print_symboltable(void)
 {
@@ -61,8 +44,8 @@ int count_func_args(tree *p) {
 }
 
 void mk_symboltable(tree *p) {
-    int i, j, base_cnt = 0;
-    
+    int i, j, base_cnt = 0;    
+
     start_symboltable(p);
     /* global variables */
     for(i = 0; i < n_symbol_table; i++) {
@@ -130,7 +113,7 @@ void static_checks(tree *p) {
 	    for(j=0; j<n_symbol_table; j++)
 		if(symbol_table[j].type == VARIABLE && strcmp(symbol_table[j].local_to, "*n/a*") != 0 && i != j)
 		    if(strcmp(symbol_table[i].name, symbol_table[j].name) == 0 && strcmp(symbol_table[i].local_to, symbol_table[j].local_to) == 0) {
-			printf("static_checks(): variables with the duplicate name of '%s' are both within the scope of '%s'.\n",
+			fprintf(stderr, "static_checks(): variables with the duplicate name of '%s' are both within the scope of '%s'.\n",
 			       symbol_table[i].name, symbol_table[j].local_to);
 			err++;
 		    }
@@ -140,10 +123,10 @@ void static_checks(tree *p) {
     /* check if the variables that are being used are defined */ 
     err += var_define_check(p);
 
-    printf("%d Errors from static checks have been found.\n", err);
+    fprintf(stderr, "%d Errors from static checks have been found.\n", err);
 
     if(err > 0) {
-	printf("Exited abnormally.\n");
+	fprintf(stderr, "Exited abnormally.\n");
 	exit(1);
     }
     
@@ -159,7 +142,7 @@ int proc_call_check(tree *p) {
 	    for (i=0; i<n_symbol_table; i++)
 		if (strcmp(symbol_table[i].name, p->child1->nodeName) == 0 && symbol_table[i].type == ROUTINE)
 		    if (count_func_args(p->next) != symbol_table[i].num_args) {
-			printf("static_check_trav(): The procedure '%s' was not called with the correct number of arguments.\n", p->child1->nodeName);
+			fprintf(stderr, "static_check_trav(): The procedure '%s' was not called with the correct number of arguments.\n", p->child1->nodeName);
 			err++;
 		    }
 	    break;
@@ -255,13 +238,31 @@ int var_define_check(tree *p) {
 
          case ID:
 	     if(symbol_find(p->nodeName, VARIABLE) == NOTFOUND) { /* scan identifiers and check if they exist in symbol table */
-		  printf("var_define_check(): The variable '%s' was not declared.\n", p->nodeName);
+		  fprintf(stderr, "var_define_check(): The variable '%s' was not declared.\n", p->nodeName);
 		  err++;
 	      }
               break;
      }
      
      return err;
+}
+
+int var_offset(int id) {
+    if (strcmp(symbol_table[id].local_to, "*global*") == 0) /* global variable */
+	return symbol_table[id].base_addr_offset;
+    else if (strcmp(symbol_table[id].local_to, "*n/a*") != 0) /* local variable */
+	return symbol_table[id].fp_offset;
+    else /* something else */
+	return NOTFOUND;
+}
+
+char *var_type(int id) {
+    if (strcmp(symbol_table[id].local_to, "*global*") == 0) /* global variable */
+	return "BP";
+    else if (strcmp(symbol_table[id].local_to, "*n/a*") != 0) /* local variable */
+	return "SP";
+    else
+	return NULL;
 }
 
 int symbol_find(char *name, int type)
@@ -277,6 +278,7 @@ int symbol_find(char *name, int type)
 
 int symbol_type(int i) {
 /* Return the type of symbol that has index i */
+/* Type being a procedure or variable */
     return symbol_table[i].type;
 }
 
