@@ -101,7 +101,7 @@ void code_gen_trav(tree *p) {
 		  code_gen_trav(p->child1);
 		  fprintf(fp, ",");
 		  if(p->child2->nodeTag == ID) {
-		      fprintf(fp, "M[%s+%d]", var_type(p->child2->nodeName), var_offset(p->nodeName));
+		      fprintf(fp, "M[%s+%d]", var_type(p->child2->nodeName), var_offset(p->child2->nodeName));
 		  } else if(p->child2->nodeTag == LITEXP) {
 		      fprintf(fp, "%d", p->child2->nodeName);
 		  }
