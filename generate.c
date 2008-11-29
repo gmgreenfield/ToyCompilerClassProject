@@ -128,8 +128,11 @@ void code_gen_trav(tree *p) {
               break;
 
          case MINUSEXP:
-              code_gen_trav(p->child1);
-              code_gen_trav(p->child2);
+	      fprintf(fp, "(SUBI,%s,", register_inc());
+	      code_gen_trav(p->child1);
+	      fprintf(fp, ",");
+	      code_gen_trav(p->child2);
+	      fprintf(fp, ")\n");
               break;
 
          case LITEXP:

@@ -1,4 +1,6 @@
-{
- write x;
+proc main(arg) {
+    declare x;
+   
+    write x;
 }
 

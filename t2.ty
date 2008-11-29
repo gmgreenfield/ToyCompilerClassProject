@@ -1,6 +1,9 @@
-{
-x = 2;
-y = x+3;
-write y;
+proc main (arg) {
+    declare x;
+    declare y;
+
+    x = 2;
+    y = x+3;
+    write y;
 }
 

@@ -1,5 +1,6 @@
-{
-declare x;
-x = (33+3)-35;
-write x;
+proc main(arg) {
+    declare x;
+
+    x = (33+3)-35;
+    write x;
 }
