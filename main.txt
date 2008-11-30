@@ -14,11 +14,7 @@
 (ASSIGN,FP,SP)
 (ADDI,SP,SP,5)
 (JUMP,200)            # 200 is the main label #
-
-# notice that returning from
-  the main procedure means
-  the program is finished #
-(LABEL,100)
+(LABEL,100)           # notice that returning from the main procedure means the program is finished #
 (EXIT)
 
 # Here's the body of main.#

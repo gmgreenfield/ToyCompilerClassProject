@@ -37,4 +37,5 @@ typedef struct tree {
         char *nodeName;
         struct tree *child1,*child2;
         struct tree *next,*next1,*next2;
+        char *reg_used;
 }tree;

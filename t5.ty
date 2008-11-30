@@ -1,6 +1,6 @@
 proc main(arg) {
     declare x;
 
-    x = (33+3)-35;
+    x = (((23-3)+792)-((1+2)-4));
     write x;
 }

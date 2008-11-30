@@ -24,6 +24,7 @@ tree *nodealloc(int production) {
      newnode->next     = NULL;
      newnode->next1    = NULL;
      newnode->next2    = NULL;
+     newnode->reg_used = NULL;
      return newnode;
 };
 
