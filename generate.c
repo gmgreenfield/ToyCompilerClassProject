@@ -11,6 +11,10 @@
 
 char *reg_push(int);
 char *reg_refrence(int);
+void reg_print(void);
+void trav_exp(tree *);
+void code_gen(tree *);
+void code_gen_trav(tree *);
 
 static FILE *fp;
 static int s_size = 1; /* start naming the registers at M1 */
@@ -139,7 +143,7 @@ void code_gen_trav(tree *p) {
               break;
 
          case DECL:
-	      //printf("declare %s",p->nodeName);
+	      /* printf("declare %s",p->nodeName); */
 	      break;
 
          case ASSIGNSTMT:
@@ -185,24 +189,5 @@ void code_gen_trav(tree *p) {
 	      break;
      }
     return;
-}
-
-char *register_inc(void) {
-    /* start counting at 1 */
-    static int count = 1;
-    static int track = -1;
-
-    char *acc;
-    acc = (char *)malloc(sizeof(char)*10);
-
-    ++track;
-    if(track == 2) {
-        track = 0;
-        ++count;
-    }
-
-    sprintf(acc, "M%d", count);
-
-    return acc;
 }
 
