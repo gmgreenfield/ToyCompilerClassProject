@@ -7,15 +7,6 @@
 #include        "symbol.h"
 #include        "generate.h"   
 
-#define		STACK_MAX	300
-
-char *reg_push(int);
-char *reg_refrence(int);
-void reg_print(void);
-void trav_exp(tree *);
-void code_gen(tree *);
-void code_gen_trav(tree *);
-
 static FILE *fp;
 static int s_size = 1; /* start naming the registers at M1 */
 static char *reg_stack[STACK_MAX];
