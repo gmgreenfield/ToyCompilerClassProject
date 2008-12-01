@@ -140,30 +140,33 @@ void code_gen_trav(tree *p) {
          case ASSIGNSTMT:
 	      if(p->child2->nodeTag == PLUSEXP || p->child2->nodeTag == MINUSEXP) {
 		  code_gen_trav(p->child2);
-		  fprintf(fp, "(ASSIGN,M[");
+		  fprintf(fp, "(ASSIGN,");
 		  code_gen_trav(p->child1);
-		  fprintf(fp, "],%s)\n", reg_refrence(s_size-1));
+		  fprintf(fp, ",%s)\n", reg_refrence(s_size-1));
 	      } else {
 		  fprintf(fp, "(ASSIGN,");
 		  code_gen_trav(p->child1);
 		  fprintf(fp, ",");
-		  if(p->child2->nodeTag == ID) {
-		      fprintf(fp, "M[%s+%d]", var_type(p->child2->nodeName), var_offset(p->child2->nodeName));
-		  } else if(p->child2->nodeTag == LITEXP) {
-		      fprintf(fp, "%d", p->child2->nodeName);
-		  }
+		  code_gen_trav(p->child2);
 		  fprintf(fp, ")\n");
               }
               break;
 	      
          case READSTMT:
-	      fprintf(fp, "(READI,M[");
+	      fprintf(fp, "(READI,");
 	      code_gen_trav(p->child1);
-	      fprintf(fp, "])\n");
+	      fprintf(fp, ")\n");
 	      break;
 
          case WRITESTMT:
-	      code_gen_trav(p->child1);                       
+	      if (p->child1->nodeTag == PLUSEXP || p->child1->nodeTag == MINUSEXP) {
+		   code_gen_trav(p->child1);
+		   fprintf(fp, "(WRITEI,%s)\n", reg_refrence(s_size-1));
+	      } else {
+		   fprintf(fp, "(WRITEI,");
+		   code_gen_trav(p->child1);
+		   fprintf(fp, ")\n");
+	      }
               break;
 
          case PLUSEXP:
@@ -176,9 +179,8 @@ void code_gen_trav(tree *p) {
 	      break;
 
          case ID:
-	      fprintf(fp, "%s+%d", var_type(p->nodeName), var_offset(p->nodeName));
+	      fprintf(fp, "M[%s+%d]", var_type(p->nodeName), var_offset(p->nodeName));
 	      break;
      }
     return;
 }
-
