@@ -3,7 +3,7 @@
 *	Compiler Globals
 */
 
-/* This is the CFG for the Toy language. We refer to
+/* This is the CFG for the Toy+ language. We refer to
    the number of each production as its "nodeTag"
 
 1.  program    -> { stmt_list }

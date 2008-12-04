@@ -3,10 +3,10 @@
 CFLAGS=		# -Wall -g
 CC=		gcc
 #
-SOURCE=		tc.sh toy.y lex.l symbol.c generate.c generate.h symbol.h Makefile *.ty globals.h
+SOURCE=		tc.sh toy.y lex.l symbol.c generate.c label.c label.h generate.h symbol.h Makefile *.ty globals.h
 #
 all:		toy tc
-toy:		toy.tab.o lex.yy.o symbol.o generate.o
+toy:		toy.tab.o lex.yy.o symbol.o generate.o label.o
 		gcc $(CFLAGS) -o $@ $^
 
 lex.yy.c:	lex.l toy.tab.h

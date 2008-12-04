@@ -1,0 +1,12 @@
+declare sample;
+
+proc main(arg) {
+     declare count;
+     sample = 33;
+     count = 10;
+
+     while (sample) {
+     	   count = count + 1;
+     };
+
+}

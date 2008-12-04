@@ -9,14 +9,13 @@
 
 static FILE *fp;
 
-static int s_size = 1;			/* start naming the registers at M1 */
+/* register assignment */
+static int s_size = 1;			/* start naming the registers at R1 */
 static char *reg_stack[STACK_MAX];
 
-static int ss_size = 1;
-static int label_stack[STACK_MAX];
+/* label assignment in label.c */
 
-char *reg_push(int id)
-{
+char *reg_push(int id) {
 	char *tmp;
 	tmp = (char *)malloc(sizeof (char) * 7);
 	sprintf(tmp, "R%d", id);
@@ -24,18 +23,8 @@ char *reg_push(int id)
 	return reg_stack[id];
 }
 
-char *reg_refrence(int id)
-{
+char *reg_refrence(int id) {
 	return reg_stack[id];
-}
-
-int label_push(int id) {
-     label_stack[id] = id;
-     return label_stack[id];
-}
-
-int label_refrence(int *id) {
-     return label_stack[*id--];
 }
 
 void trav_exp(tree * p)
@@ -106,38 +95,42 @@ void code_gen_trav(tree * p)
 		break;
 
 	case WHILE_STMT:
+	        enter_ctrlstmt();
 	        fprintf(fp, "# begin while stmt #\n");
-		if(p->child1->nodeTag == LITEXP || p->child1->nodeTag == ID) {
-		     fprintf(fp, "(ADDI,%s,", reg_push(s_size++));
+		if(p->child1->nodeTag == ID || p->child1->nodeTag == LITEXP) {
+		     fprintf(fp, "(ASSIGN,%s,", reg_push(s_size++));
 		     code_gen_trav(p->child1);
-		     fprintf(fp, ",0)\n");
+		     fprintf(fp, ")\n");
 		} else {
-		     code_gen_trav(p->child1);
+		code_gen_trav(p->child1);
 		}
-		fprintf(fp, "(JNZ,%s,%d)\n", reg_refrence(s_size - 1), ss_size++);
-		fprintf(fp, "(JUMP,%d)\n", ss_size++);
-		fprintf(fp, "(LABEL,%d)\n", ss_size - 2);
+		fprintf(fp, "(JNZ,%s,%d)\n", reg_refrence(s_size - 1), add_label());
+		fprintf(fp, "(JUMP,%d)\n", add_label());
+		fprintf(fp, "(LABEL,%d)\n", refrence_label(2)); /* label_size - 2 */
 		if (p->next != NULL) { code_gen_trav(p->next); } /* while loop body */
-		fprintf(fp, "(LABEL,%d)\n", ss_size - 1);
+		fprintf(fp, "(LABEL,%d)\n", refrence_label(1)); /* label_size - 1 */
 		fprintf(fp, "# end while stmt #\n");
+		leave_ctrlstmt();
 		break;
 
 	case IFTHENELSE_STMT:
+	        enter_ctrlstmt();
 	        fprintf(fp, "# begin if-then-else stmt #\n");
-		if(p->child1->nodeTag == LITEXP || p->child1->nodeTag == ID) {
-		     fprintf(fp, "(ADDI,%s,", reg_push(s_size++));
+		if(p->child1->nodeTag == ID || p->child1->nodeTag == LITEXP) {
+		     fprintf(fp, "(ASSIGN,%s,", reg_push(s_size++));
 		     code_gen_trav(p->child1);
-		     fprintf(fp, ",0)\n");
+		     fprintf(fp, ")\n");
 		} else {
-		     code_gen_trav(p->child1);
+		code_gen_trav(p->child1);
 		}
-		fprintf(fp, "(JNZ,%s,%d)\n", reg_refrence(s_size - 1), ss_size++);
+		fprintf(fp, "(JNZ,%s,%d)\n", reg_refrence(s_size - 1), add_label());
 		if (p->next != NULL) { code_gen_trav(p->next1); } /* then statements */
-		fprintf(fp, "(JUMP,%d)\n", ss_size++);
-		fprintf(fp, "(LABEL,%d)\n", ss_size-2); 
+		fprintf(fp, "(JUMP,%d)\n", add_label());
+		fprintf(fp, "(LABEL,%d)\n", refrence_label(2)); /* label_size - 2 */ 
 		if (p->next1 != NULL) { code_gen_trav(p->next); } /* else statements */
-		fprintf(fp, "(LABEL,%d)\n", ss_size-1);
+		fprintf(fp, "(LABEL,%d)\n", refrence_label(1)); /* label_size - 1 */
 		fprintf(fp, "# end if-then-else stmt #\n");
+		leave_ctrlstmt();
 		break;
 
 	case PROCS:

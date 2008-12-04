@@ -1,0 +1,16 @@
+declare sample;
+
+proc main(arg) {
+     sample = 33;
+
+     if (sample - 1) {
+     	if(sample + 1) {
+      	    sample = sample - 1;
+	} else {
+	    sample = sample + 1;
+	};
+     } else {
+        sample = sample + 1;
+     };
+
+}
