@@ -12,9 +12,12 @@ void leave_ctrlstmt(void);
 int add_label(void);
 int refrence_label(int);
 
+#define		   STACK_MAX	   300      /* maximum depth of register stack */
+#define            RECORD_MAX      100      /* maximum depth of record table */
+
 static int ptr_size = 0; /* size of pointer stack */
 static int label_size = 1; /* size of label stack */
 static int ptr_stack[STACK_MAX]; /* pointers to the nested levels of labels */
 static int label_stack[RECORD_MAX]; /* stores the active labels in use */
 
-#endif LABEL_H
+#endif

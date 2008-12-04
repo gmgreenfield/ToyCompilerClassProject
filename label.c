@@ -1,3 +1,4 @@
+#include "label.h"
 
 int ptr_stack_push(int id) {
     ptr_stack[ptr_size++] = id;
