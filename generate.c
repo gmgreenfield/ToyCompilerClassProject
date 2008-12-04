@@ -98,16 +98,19 @@ void code_gen_trav(tree * p)
 	        enter_ctrlstmt();
 	        fprintf(fp, "# begin while stmt #\n");
 		if(p->child1->nodeTag == ID || p->child1->nodeTag == LITEXP) {
+		     fprintf(fp, "(LABEL,%d)\n", add_label());
 		     fprintf(fp, "(ASSIGN,%s,", reg_push(s_size++));
 		     code_gen_trav(p->child1);
 		     fprintf(fp, ")\n");
 		} else {
+		fprintf(fp, "(LABEL,%d)\n", add_label());
 		code_gen_trav(p->child1);
 		}
 		fprintf(fp, "(JNZ,%s,%d)\n", reg_refrence(s_size - 1), add_label());
 		fprintf(fp, "(JUMP,%d)\n", add_label());
 		fprintf(fp, "(LABEL,%d)\n", refrence_label(2)); /* label_size - 2 */
 		if (p->next != NULL) { code_gen_trav(p->next); } /* while loop body */
+		fprintf(fp, "(JUMP,%d)\n", refrence_label(3)); /* label_size - 3 */
 		fprintf(fp, "(LABEL,%d)\n", refrence_label(1)); /* label_size - 1 */
 		fprintf(fp, "# end while stmt #\n");
 		leave_ctrlstmt();
