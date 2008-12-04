@@ -1,0 +1,26 @@
+declare temp;
+declare test;
+declare foobar;
+
+proc randw (x, y, z) {
+     declare count;
+     declare temp;
+     declare swap;
+     read foobar;
+     read y;
+}
+
+proc test ( foo, bar, baz ) {
+     declare localvar1;
+     declare localvar2;
+     foo = baz;
+     baz = bar;
+     bar = foo;
+}
+
+proc main ( arg1 ) {
+     declare count;
+     declare blank;
+     call test (temp, test, foobar);
+     call randw(temp, test, foobar);
+}

@@ -12,6 +12,6 @@ void code_gen_trav(struct tree *);
 
 #define		   STACK_MAX	   300      /* maximum depth of register stack */
 #define            RECORD_MAX      100      /* maximum depth of record table */
-#define            OUTFILE         "out.ty" /* default name for the tuple code file */
+#define            OUTFILE         "out.ir" /* default name for the tuple code output file */
 
 #endif

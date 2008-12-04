@@ -1,0 +1,11 @@
+declare sample;
+
+proc main(arg) {
+     sample = 33;
+
+     if (sample + 792) 
+     	{ sample = 1; } 
+     else 
+     	{ sample = 2; };
+
+}

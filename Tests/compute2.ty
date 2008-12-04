@@ -1,0 +1,7 @@
+proc main(arg) {
+    declare x;
+    declare foobar;
+    foobar = 792;
+    x = (((23-foobar)+79)-((1+2)-4));
+    write x;
+}
