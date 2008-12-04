@@ -1,6 +1,0 @@
-proc main(arg) {
-    declare x;
-
-    x = (((23-arg)+792)-((1+2)-4));
-    write x;
-}

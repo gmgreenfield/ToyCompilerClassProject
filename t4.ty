@@ -1,6 +1,0 @@
-proc main (arg) {
-    declare x;
-
-    x = (33+3)-5;
-    write x;
-}
