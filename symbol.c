@@ -7,7 +7,7 @@
 #include        <string.h>			/* for strcmp, strdup & friends */
 #include        <stdlib.h>			/* for exit */
 #include        "globals.h"
-#include        "toy.tab.h"			/* token type definitions from .y file */
+#include        "toy+.tab.h"			/* token type definitions from .y file */
 #include        "symbol.h"
 
 static ENTRY symbol_table[MAX_SYMBOLS];

@@ -5,8 +5,8 @@
 #include	<string.h>	/* for strcmp, strdup & friends */
 #include	<stdlib.h>	/* for atoi() */
 #include        "globals.h"
-#include	"toy.tab.h"	/* token type definitions from .y file */
-extern int	lineno;		/* defined in toy.y */
+#include	"toy+.tab.h"	/* token type definitions from .y file */
+extern int	lineno;		/* defined in toy+.y */
 %}
 
 alpha			[A-Za-z]

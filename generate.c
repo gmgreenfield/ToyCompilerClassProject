@@ -3,7 +3,7 @@
 #include        <stdlib.h>		/* for exit */
 #include        <stdio.h>
 #include        "globals.h"
-#include        "toy.tab.h"		/* token type definitions from .y file */
+#include        "toy+.tab.h"		/* token type definitions from .y file */
 #include        "symbol.h"
 #include        "generate.h"
 
