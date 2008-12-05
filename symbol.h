@@ -34,10 +34,11 @@ typedef struct
     int base_addr_offset;               /* variable is found at offset i from the constant base address*/
 } ENTRY;
 
-#define		MAX_SYMBOLS	100
+#define		MAX_SYMBOLS	100      /* the maximum capactiy of the symbol table */
 #define         ROUTINE         0
 #define         VARIABLE        1
 #define         NOTFOUND        -1
-#define         FP_BASE         3
+#define         FP_BASE         4        /* start incrementing registers at these numbers FP_BASE+n where n=0,1,... */
+#define         BP_BASE         1
 
 #endif

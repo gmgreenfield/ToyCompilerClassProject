@@ -50,7 +50,7 @@ void mk_symboltable(tree *p) {
     /* global variables */
     for(i = 0; i < n_symbol_table; i++) {
 	if(symbol_table[i].type == VARIABLE && strcmp(symbol_table[i].local_to, "*global*") == 0)
-	    symbol_table[i].base_addr_offset = base_cnt++;
+	    symbol_table[i].base_addr_offset = BP_BASE + base_cnt++;
     }
     
     base_cnt = 0;
@@ -306,6 +306,25 @@ int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
 	symbol_table[n_symbol_table].fp_offset = 0;
 	symbol_table[n_symbol_table].base_addr_offset = 0;
 	return n_symbol_table++;
+}
+
+/* used in tuple code generation */
+int num_global_vars(void) {
+     int i, j = 0;
+     for(i=0; i<n_symbol_table; i++) {
+	  if(strcmp(symbol_table[i].local_to, "*global*") == 0) { j++; }
+     }
+     return j;
+}
+
+/* used in tuple code generation */
+int num_local_vars(char *f_name) {
+     int i, j = 0;
+     for(i=0; i<n_symbol_table; i++)
+	  if(strcmp(f_name, symbol_table[i].local_to) == 0)
+	       j++;
+     
+     return j;
 }
 
 void symbol_declare(int i)

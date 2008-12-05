@@ -2,14 +2,17 @@ declare sample;
 
 proc main(arg) {
      declare count;
-     sample = 33;
-     count = 10;
+     sample = 10;
+     count = 3;
 
      while (sample) {
-     	   while(sample + count) {
-	   count = count + 1;
-	   write count;
+	   sample = sample - 1;
+	   write sample;
+     	   while(count) {
+           	count = count - 1;
+           	write count;
 	   };
+           count = 3;
      };
 
 }

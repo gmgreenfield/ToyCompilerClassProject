@@ -32,7 +32,7 @@ void trav_exp(tree * p)
 	if (p->child1 != NULL) {
 		trav_exp(p->child1);
 	}
-
+	
 	if (p->child2 != NULL) {
 		trav_exp(p->child2);
 	}
@@ -45,15 +45,17 @@ void trav_exp(tree * p)
 			p->reg_used = strdup(reg_refrence(s_size - 1));
 		}
 		else if (p->child2->reg_used != NULL) {
-			fprintf(fp, "(%s,%s,%d,%s)\n",
-					p->nodeTag == PLUSEXP ? "ADDI" : "SUBI", reg_push(s_size++),
-					p->child1->nodeVal, p->child2->reg_used);
-			p->reg_used = strdup(reg_refrence(s_size - 1));
+		        fprintf(fp, "(%s,%s,", p->nodeTag == PLUSEXP ? "ADDI" : "SUBI", reg_push(s_size++));
+		        code_gen_trav(p->child1);
+		        fprintf(fp, ",%s)\n", p->child2->reg_used);
+		        p->reg_used = strdup(reg_refrence(s_size - 1));
 		}
 		else if (p->child1->reg_used != NULL) {
-			fprintf(fp, "(%s,%s,%s,%d)\n",
+			fprintf(fp, "(%s,%s,%s,",
 					p->nodeTag == PLUSEXP ? "ADDI" : "SUBI", reg_push(s_size++),
-					p->child1->reg_used, p->child2->nodeVal);
+					p->child1->reg_used);
+			code_gen_trav(p->child2);
+			fprintf(fp, ")\n");
 			p->reg_used = strdup(reg_refrence(s_size - 1));
 		}
 		else {
@@ -64,18 +66,38 @@ void trav_exp(tree * p)
 			fprintf(fp, ")\n");
 			p->reg_used = strdup(reg_refrence(s_size - 1));
 		}
-	}
+	} /* if */
+}
+
+int get_funct_label(char *name) {
+     int i;
+     i = symbol_find(name, ROUTINE);
+     if(i == NOTFOUND) return NOTFOUND;
+     return ((i = i+2)*1000);
+}
+
+void print_funct_exit(char *f_name) {
+     fprintf(fp, "(ASSIGN,%s,M[FP+1])\n", reg_push(s_size++));
+     fprintf(fp, "(ASSIGN,SP,M[FP+2])\n(ASSIGN,FP,M[FP+3])\n");
+     fprintf(fp, "(JUMP,%s)\n", reg_refrence(s_size - 1));
+     return;
 }
 
 void code_gen(tree * p)
 {
 	fp = fopen(OUTFILE, "w");	/* open file for write only access */
 
+	/* tuple code to call main subroutine */
+	fprintf(fp, "(ASSIGN,FP,BP)\n(ADDI,SP,BP,%d)\n", (num_global_vars() + 1));
+	fprintf(fp, "(ASSIGN,M[SP+1],1000)\n(ASSIGN,M[SP+2],SP)\n(ASSIGN,M[SP+3],FP)\n(ASSIGN,FP,SP)\n(ADDI,SP,SP,%d)\n(JUMP,%d)\n",
+		(num_local_vars("main") + 5), get_funct_label("main"));
+
+	/* exit section of tuple code */
+	fprintf(fp,"\n(LABEL,1000)\n%s","(EXIT)\n\n");
+	
 	/* begin the actual process */
 	code_gen_trav(p);
 
-	/* the last line in the tuple code */
-	/* fprintf(fp,"%s","(EXIT)\n"); */
 	fclose(fp);
 
 	printf("Tuple code has been written to %s.\nExited normally.\n", OUTFILE);
@@ -144,16 +166,12 @@ void code_gen_trav(tree * p)
 		break;
 
 	case PROCDECL:
-		code_gen_trav(p->child1);
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
-		}
-		if (p->next1 != NULL) {
-			code_gen_trav(p->next1);
-		}
-		if (p->next2 != NULL) {
-			code_gen_trav(p->next2);
-		}
+	        /* code_gen_trav(p->child1); /* NAME */
+		/* if (p->next != NULL) { code_gen_trav(p->next); } /* var list */
+	        fprintf(fp, "(LABEL,%d) # %s #\n", get_funct_label(p->child1->nodeName), p->child1->nodeName);
+		if (p->next1 != NULL) { code_gen_trav(p->next1); } /* decl list */
+		if (p->next2 != NULL) { code_gen_trav(p->next2); } /* stmt list */
+		print_funct_exit(p->child1->nodeName);
 		break;
 
 	case VARS:
