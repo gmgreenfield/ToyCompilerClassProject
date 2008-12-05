@@ -6,24 +6,34 @@
 /* This is the CFG for the Toy+ language. We refer to
    the number of each production as its "nodeTag"
 
-1.  program    -> { stmt_list }
-2.  stmt_list  -> stmt ; stmt_list
-3.  stmt_list  -> lambda      --- i.e., an empty production
-4.  stmt       -> decl
-5.  stmt       -> assign
-6.  stmt       -> read_stmt
-7.  stmt       -> write_stmt
-8.  decl       -> DECLARE Name
-9.  assign     -> var = expr
-10. read_stmt  -> READ var
-11. write_stmt -> WRITE expr
-12. expr       -> term
-13. expr       -> term + term
-14. expr       -> term - term
-15. term       -> NUMBER
-16. term       -> var
-17. term       -> ( expr )
-18. var        -> NAME
+1.  program    -> decl_list proc_list
+2.  decl_list  -> decl ; decl_list
+3.  decl_list  -> lambda
+4.  proc_list  -> procdecl proc_list
+5.  proc_list  -> lambda
+6.  procdecl   -> proc NAME (var_list) { decl_list stmt_list }
+7.  var_list   -> var var_list_tail
+8.  var_list_tail -> , var_list
+9.  var_list_tail -> lambda
+10. arg_list   -> expr arg_list_tail
+11. arg_list_tail -> , arg_list
+12. arg_list_tail -> lambda
+13.  stmt_list  -> stmt ; stmt_list
+14.  stmt_list  -> lambda      --- i.e., an empty production
+15.  stmt       -> assign
+16.  stmt       -> read_stmt
+17.  stmt       -> write_stmt
+18.  decl       -> DECLARE Name
+19.  assign     -> var = expr
+20. read_stmt  -> READ var
+21. write_stmt -> WRITE expr
+22. expr       -> term
+23. expr       -> term + term
+24. expr       -> term - term
+25. term       -> NUMBER
+26. term       -> var
+27. term       -> ( expr )
+28. var        -> NAME
 
 */
 
