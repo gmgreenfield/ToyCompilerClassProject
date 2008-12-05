@@ -89,6 +89,106 @@ void start_symboltable(tree *p)
 	}
 }
 
+int var_offset(char *name) {
+    int i;
+    for(i=0; i<n_symbol_table; i++) {
+	if(strcmp(symbol_table[i].name, name) == 0 && symbol_table[i].type == VARIABLE) {
+	    if(strcmp(symbol_table[i].local_to, "*global*") == 0) {
+		return symbol_table[i].base_addr_offset;
+	    } else {
+		return symbol_table[i].fp_offset;
+	    }
+	}
+    }
+}
+
+char *var_type(char *name) {
+    int i;
+    for(i=0; i<n_symbol_table; i++) {
+	if(strcmp(symbol_table[i].name, name) == 0) {
+	    if(strcmp(symbol_table[i].local_to, "*global*") == 0) {
+		return "BP";
+	    } else {
+		return "FP";
+	    }
+	}
+    }
+}
+
+int symbol_find(char *name, int type)
+/* Find index of symbol table entry, -1 if not found */
+{
+	int i;
+
+	for (i = 0; (i < n_symbol_table); ++i)
+		if (strcmp(symbol_table[i].name, name) == 0 && symbol_table[i].type == type)
+		    return i;
+	return NOTFOUND;
+}
+
+int symbol_type(int i) {
+/* Return the type of symbol that has index i */
+/* Type being a procedure or variable */
+    return symbol_table[i].type;
+}
+
+int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
+/* Insert new symbol with a given type into symbol table, returns index new value */
+/* Routine is 0, variable is 1 for the entry_type */
+{
+	if (n_symbol_table >= MAX_SYMBOLS) {
+		fprintf(stderr, "Symbol table overflow (%d) entries\nExited abnormally.\n", n_symbol_table);
+		exit(1);
+	}
+	symbol_table[n_symbol_table].name = strdup(name);
+	symbol_table[n_symbol_table].declared = 1;
+	symbol_table[n_symbol_table].type = entry_type;
+	symbol_table[n_symbol_table].local_to = strdup(local_to);
+	symbol_table[n_symbol_table].num_args = num_args;
+	symbol_table[n_symbol_table].fp_offset = 0;
+	symbol_table[n_symbol_table].base_addr_offset = 0;
+	return n_symbol_table++;
+}
+
+/* used in tuple code generation */
+int num_global_vars(void) {
+     int i, j = 0;
+     for(i=0; i<n_symbol_table; i++) {
+	  if(strcmp(symbol_table[i].local_to, "*global*") == 0) { j++; }
+     }
+     return j;
+}
+
+/* used in tuple code generation */
+int num_local_vars(char *f_name) {
+     int i, j = 0;
+     for(i=0; i<n_symbol_table; i++)
+	  if(strcmp(f_name, symbol_table[i].local_to) == 0)
+	       j++;
+     
+     return j;
+}
+
+void symbol_declare(int i)
+/* Mark a symbol in the table as declared */
+{
+	symbol_table[i].declared = 1;
+}
+
+int symbol_declared(int i)
+/* Return declared property of symbol */
+{
+	return symbol_table[i].declared;
+}
+
+char *symbol_name(int i)
+/* Return declared property of symbol */
+{
+	return symbol_table[i].name;
+}
+
+/* Static checks for compiler */
+
 void static_checks(tree *p) {
     int i, j, err = 0;
     
@@ -247,100 +347,3 @@ int var_define_check(tree *p) {
      return err;
 }
 
-int var_offset(char *name) {
-    int i;
-    for(i=0; i<n_symbol_table; i++) {
-	if(strcmp(symbol_table[i].name, name) == 0 && symbol_table[i].type == VARIABLE) {
-	    if(strcmp(symbol_table[i].local_to, "*global*") == 0) {
-		return symbol_table[i].base_addr_offset;
-	    } else {
-		return symbol_table[i].fp_offset;
-	    }
-	}
-    }
-}
-
-char *var_type(char *name) {
-    int i;
-    for(i=0; i<n_symbol_table; i++) {
-	if(strcmp(symbol_table[i].name, name) == 0) {
-	    if(strcmp(symbol_table[i].local_to, "*global*") == 0) {
-		return "BP";
-	    } else {
-		return "FP";
-	    }
-	}
-    }
-}
-
-int symbol_find(char *name, int type)
-/* Find index of symbol table entry, -1 if not found */
-{
-	int i;
-
-	for (i = 0; (i < n_symbol_table); ++i)
-		if (strcmp(symbol_table[i].name, name) == 0 && symbol_table[i].type == type)
-		    return i;
-	return NOTFOUND;
-}
-
-int symbol_type(int i) {
-/* Return the type of symbol that has index i */
-/* Type being a procedure or variable */
-    return symbol_table[i].type;
-}
-
-int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
-/* Insert new symbol with a given type into symbol table, returns index new value */
-/* Routine is 0, variable is 1 for the entry_type */
-{
-	if (n_symbol_table >= MAX_SYMBOLS) {
-		fprintf(stderr, "Symbol table overflow (%d) entries\nExited abnormally.\n", n_symbol_table);
-		exit(1);
-	}
-	symbol_table[n_symbol_table].name = strdup(name);
-	symbol_table[n_symbol_table].declared = 1;
-	symbol_table[n_symbol_table].type = entry_type;
-	symbol_table[n_symbol_table].local_to = strdup(local_to);
-	symbol_table[n_symbol_table].num_args = num_args;
-	symbol_table[n_symbol_table].fp_offset = 0;
-	symbol_table[n_symbol_table].base_addr_offset = 0;
-	return n_symbol_table++;
-}
-
-/* used in tuple code generation */
-int num_global_vars(void) {
-     int i, j = 0;
-     for(i=0; i<n_symbol_table; i++) {
-	  if(strcmp(symbol_table[i].local_to, "*global*") == 0) { j++; }
-     }
-     return j;
-}
-
-/* used in tuple code generation */
-int num_local_vars(char *f_name) {
-     int i, j = 0;
-     for(i=0; i<n_symbol_table; i++)
-	  if(strcmp(f_name, symbol_table[i].local_to) == 0)
-	       j++;
-     
-     return j;
-}
-
-void symbol_declare(int i)
-/* Mark a symbol in the table as declared */
-{
-	symbol_table[i].declared = 1;
-}
-
-int symbol_declared(int i)
-/* Return declared property of symbol */
-{
-	return symbol_table[i].declared;
-}
-
-char *symbol_name(int i)
-/* Return declared property of symbol */
-{
-	return symbol_table[i].name;
-}
