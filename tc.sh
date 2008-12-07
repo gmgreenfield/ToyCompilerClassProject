@@ -12,4 +12,4 @@ then
 	exit 1
 fi
 #
-./toy $1 <$1.ty 
+./toy+ $1

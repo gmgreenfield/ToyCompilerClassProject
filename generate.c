@@ -79,7 +79,7 @@ int get_funct_label(char *name) {
 void print_funct_exit(char *f_name) {
      fprintf(fp, "(ASSIGN,%s,M[FP+1])\n", reg_push(s_size++));
      fprintf(fp, "(ASSIGN,SP,M[FP+2])\n(ASSIGN,FP,M[FP+3])\n");
-     fprintf(fp, "(JUMP,%s)\n", reg_refrence(s_size - 1));
+     fprintf(fp, "(JUMP,%s)\n\n", reg_refrence(s_size - 1));
      return;
 }
 
@@ -208,10 +208,12 @@ void code_gen_trav(tree * p)
 		break;
 
 	case F_CALL:
-		code_gen_trav(p->child1);
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
-		}
+	        fprintf(fp, "# begin subroutine call to %s #\n", p->child1->nodeName);
+		/* code_gen_trav(p->child1); */
+		/* if (p->next != NULL) { code_gen_trav(p->next); } */
+		fprintf(fp, "(ASSIGN,M[SP+1],%d)\n(ASSIGN,M[SP+2],SP)\n(ASSIGN,M[SP+3],FP)\n(ASSIGN,FP,SP)\n(ADDI,SP,SP,%d)\n(JUMP,%d)\n",
+			(get_funct_label(p->child1->nodeName) + 1), (num_local_vars("main") + 5), get_funct_label(p->child1->nodeName));
+		fprintf(fp, "# end subroutine call #\n(LABEL,%d)\n", (get_funct_label(p->child1->nodeName) + 1));
 		break;
 
 	case STMTS:
