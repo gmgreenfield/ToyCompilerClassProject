@@ -1,22 +1,34 @@
 #ifndef	SYMBOL_H
 #define	SYMBOL_H
 /*
-*	Symbol table management for toy language compiler.
+*	Symbol table mgmt and static checks for toy+ language compiler.
 */
 
 struct tree;
 
+/* symbol table generation */
 extern int	symbol_insert(char *, int, char *, int);
 extern void	symbol_declare(int);
 
+/* symbol table generation */
 extern void     symbolscan(struct tree *, int, char *, int);  
 extern void     print_symboltable(void);
 extern int      count_func_args(struct tree *);
 extern void     mk_symboltable(struct tree *);
 extern void     start_symboltable(struct tree *);
+
+/* static checks */
 extern void     static_checks(struct tree *);
 extern int      proc_call_check(struct tree *);
 extern int      var_define_check(struct tree *);
+
+/* tuple code generation */
+extern char *   variable_type(char *);
+extern int      variable_offset(char *);
+
+/* tuple code generation */
+extern int      num_global_vars(void);
+extern int      num_local_vars(char *);
 
 extern int	symbol_find(char *, int);
 extern char*    symbol_name(int);

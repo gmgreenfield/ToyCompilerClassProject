@@ -271,7 +271,7 @@ void code_gen_trav(tree * p)
 		break;
 
 	case ID:
-		fprintf(fp, "M[%s+%d]", var_type(p->nodeName), var_offset(p->nodeName));
+	        fprintf(fp, "M[%s+%d]", variable_type(p->nodeName), variable_offset(p->nodeName));
 		break;
 	}
 	return;

@@ -89,7 +89,7 @@ void start_symboltable(tree *p)
 	}
 }
 
-int var_offset(char *name) {
+int variable_offset(char *name) {
     int i;
     for(i=0; i<n_symbol_table; i++) {
 	if(strcmp(symbol_table[i].name, name) == 0 && symbol_table[i].type == VARIABLE) {
@@ -102,8 +102,9 @@ int var_offset(char *name) {
     }
 }
 
-char *var_type(char *name) {
+char *variable_type(char *name) {
     int i;
+
     for(i=0; i<n_symbol_table; i++) {
 	if(strcmp(symbol_table[i].name, name) == 0) {
 	    if(strcmp(symbol_table[i].local_to, "*global*") == 0) {
