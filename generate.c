@@ -85,7 +85,7 @@ void print_funct_exit(char *f_name) {
 
 void code_gen(tree * p)
 {
-	fp = fopen(OUTFILE, "w");	/* open file for write only access */
+	fp = fopen(OUTFILE, "w"); /* open file for write only access */
 
 	/* tuple code to call main subroutine */
 	fprintf(fp, "(ASSIGN,FP,BP)\n(ADDI,SP,BP,%d)\n", (num_global_vars() + 1));
@@ -109,15 +109,6 @@ void code_gen_trav(tree * p)
 	static int var_cnt = 0;
 	
 	switch (p->nodeTag) {
-	case PROGRAM:
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
-		}
-		if (p->next1 != NULL) {
-			code_gen_trav(p->next1);
-		}
-		break;
-
 	case WHILE_STMT:
 	        enter_ctrlstmt();
 	        fprintf(fp, "# begin while stmt #\n");
@@ -160,13 +151,6 @@ void code_gen_trav(tree * p)
 		leave_ctrlstmt();
 		break;
 
-	case PROCS:
-		code_gen_trav(p->child1);
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
-		}
-		break;
-
 	case PROCDECL: /* subroutine body */
 	        /* code_gen_trav(p->child1); /* NAME */
 		/* if (p->next != NULL) { code_gen_trav(p->next); } /* var list */
@@ -174,26 +158,6 @@ void code_gen_trav(tree * p)
 		if (p->next1 != NULL) { code_gen_trav(p->next1); } /* decl list */
 		if (p->next2 != NULL) { code_gen_trav(p->next2); } /* stmt list */
 		print_funct_exit(p->child1->nodeName);
-		break;
-
-	case VARS:
-		code_gen_trav(p->child1);
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
-		}
-		break;
-
-	case VARS_TAIL:
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
-		}
-		break;
-
-	case DECLS:
-		code_gen_trav(p->child1);
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
-		}
 		break;
 
 	case ARGS: /* arguments for a subroutine call */
@@ -208,12 +172,6 @@ void code_gen_trav(tree * p)
 		if (p->next != NULL) { code_gen_trav(p->next); }
 		break;
 
-	case ARGS_TAIL:
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
-		}
-		break;
-
 	case F_CALL: /* call to a subroutine */
 	        fprintf(fp, "# begin subroutine call to %s #\n", p->child1->nodeName);
 		/* code_gen_trav(p->child1); NAME */
@@ -223,17 +181,6 @@ void code_gen_trav(tree * p)
 		if (p->next != NULL) { code_gen_trav(p->next); } /* function params */
 		fprintf(fp, "(JUMP,%d)\n", get_funct_label(p->child1->nodeName));
 		fprintf(fp, "# end subroutine call #\n(LABEL,%d)\n", (get_funct_label(p->child1->nodeName) + 1));
-		break;
-
-	case STMTS:
-		code_gen_trav(p->child1);
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
-		}
-		break;
-
-	case DECL:
-		/* printf("declare %s",p->nodeName); */
 		break;
 
 	case ASSIGNSTMT:
@@ -282,6 +229,14 @@ void code_gen_trav(tree * p)
 	case ID:
 	        fprintf(fp, "M[%s+%d]", variable_type(p->nodeName), variable_offset(p->nodeName));
 		break;
-	}
+
+	default:
+	        if (p->next != NULL) { code_gen_trav(p->next); }
+	        if (p->next1 != NULL) { code_gen_trav(p->next1); }
+	        if (p->next2 != NULL) { code_gen_trav(p->next2); }
+	        if (p->child1 != NULL)  { code_gen_trav(p->child1); }
+	        if (p->child2 != NULL) { code_gen_trav(p->child2); }
+	} /* select case */
+	
 	return;
-}
+} /* code_gen_trav */
