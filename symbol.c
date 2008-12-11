@@ -151,7 +151,7 @@ int symbol_insert(char *name, int entry_type, char *local_to, int num_args)
 	return n_symbol_table++;
 }
 
-/* used in tuple code generation */
+/* The following three functions are used in tuple code generation */
 int num_global_vars(void) {
      int i, j = 0;
      for(i=0; i<n_symbol_table; i++) {
@@ -188,7 +188,7 @@ char *symbol_name(int i)
 	return symbol_table[i].name;
 }
 
-/* Static checks for compiler */
+/* The following functions are used for static checks  */
 
 void static_checks(tree *p) {
     int i, j, err = 0;

@@ -1,0 +1,21 @@
+
+
+
+proc main(arg) {
+
+call second((1+1), 111);
+call something((3+34), 222);
+
+}
+
+proc second(arg, arg2) {
+
+write arg;
+
+}
+
+proc something(arg, arg2) {
+
+write arg;
+
+}

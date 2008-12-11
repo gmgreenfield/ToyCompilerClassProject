@@ -106,6 +106,8 @@ void code_gen(tree * p)
 
 void code_gen_trav(tree * p)
 {
+	static int var_cnt = 0;
+	
 	switch (p->nodeTag) {
 	case PROGRAM:
 		if (p->next != NULL) {
@@ -165,7 +167,7 @@ void code_gen_trav(tree * p)
 		}
 		break;
 
-	case PROCDECL:
+	case PROCDECL: /* subroutine body */
 	        /* code_gen_trav(p->child1); /* NAME */
 		/* if (p->next != NULL) { code_gen_trav(p->next); } /* var list */
 	        fprintf(fp, "(LABEL,%d) # %s #\n", get_funct_label(p->child1->nodeName), p->child1->nodeName);
@@ -194,11 +196,16 @@ void code_gen_trav(tree * p)
 		}
 		break;
 
-	case ARGS:
-		code_gen_trav(p->child1);
-		if (p->next != NULL) {
-			code_gen_trav(p->next);
+	case ARGS: /* arguments for a subroutine call */
+	  	if (p->child1->nodeTag == PLUSEXP || p->child1->nodeTag == MINUSEXP) {
+		  code_gen_trav(p->child1);
+		  fprintf(fp, "(ASSIGN,M[FP+%d],%s)\n", (var_cnt++ + FP_BASE), reg_refrence(s_size - 1));
+		} else {
+		  fprintf(fp, "(ASSIGN,M[FP+%d],", (var_cnt++ + FP_BASE));
+		  code_gen_trav(p->child1);
+		  fprintf(fp, ")\n");
 		}
+		if (p->next != NULL) { code_gen_trav(p->next); }
 		break;
 
 	case ARGS_TAIL:
@@ -207,12 +214,14 @@ void code_gen_trav(tree * p)
 		}
 		break;
 
-	case F_CALL:
+	case F_CALL: /* call to a subroutine */
 	        fprintf(fp, "# begin subroutine call to %s #\n", p->child1->nodeName);
-		/* code_gen_trav(p->child1); */
-		/* if (p->next != NULL) { code_gen_trav(p->next); } */
-		fprintf(fp, "(ASSIGN,M[SP+1],%d)\n(ASSIGN,M[SP+2],SP)\n(ASSIGN,M[SP+3],FP)\n(ASSIGN,FP,SP)\n(ADDI,SP,SP,%d)\n(JUMP,%d)\n",
-			(get_funct_label(p->child1->nodeName) + 1), (num_local_vars("main") + 5), get_funct_label(p->child1->nodeName));
+		/* code_gen_trav(p->child1); NAME */
+		fprintf(fp, "(ASSIGN,M[SP+1],%d)\n(ASSIGN,M[SP+2],SP)\n(ASSIGN,M[SP+3],FP)\n(ASSIGN,FP,SP)\n(ADDI,SP,SP,%d)\n",
+			(get_funct_label(p->child1->nodeName) + 1), (num_local_vars("main") + 5));
+		var_cnt = 0;
+		if (p->next != NULL) { code_gen_trav(p->next); } /* function params */
+		fprintf(fp, "(JUMP,%d)\n", get_funct_label(p->child1->nodeName));
 		fprintf(fp, "# end subroutine call #\n(LABEL,%d)\n", (get_funct_label(p->child1->nodeName) + 1));
 		break;
 
