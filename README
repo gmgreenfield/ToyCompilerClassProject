@@ -1,0 +1,4 @@
+I've changed the main routine in the bison file so that the compiler
+can be executed easily without the use of the tc shell script. Just
+execute the compiler as you would any other local binary: ./toy+ example.ty
+The resulting compiled tuple code will be writtin to out.ir in the same directory.
