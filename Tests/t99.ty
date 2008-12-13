@@ -10,7 +10,7 @@ proc randw (x, y, z) {
      read y;
 }
 
-proc test ( foo, bar, baz ) {
+proc test (foo, bar, baz) {
      declare localvar1;
      declare localvar2;
      foo = baz;
@@ -18,7 +18,7 @@ proc test ( foo, bar, baz ) {
      bar = foo;
 }
 
-proc main ( arg1 ) {
+proc main (arg1) {
      declare count;
      declare blank;
      call test (temp, test, foobar);
