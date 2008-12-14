@@ -106,11 +106,11 @@ void code_gen(tree * p)
 
 void code_gen_trav(tree * p)
 {
-        static int var_cnt = 0;
-	static int access_cnt = 0;
-	static int refrence_cnt = 1;
-	static char *fun_arg_stack[STACK_MAX];
-	static int fun_arg_ptr = 0;
+        static int var_cnt = 0; /* amount of variables to be added to stack from one subroutine call */
+	static int access_cnt = 0; /* acount of times function parms have been accessed */
+	static int refrence_cnt = 1; /* amount of refrences to function params */
+	static char *fun_arg_stack[STACK_MAX]; /* function argument stack, used to hold function params */
+	static int fun_arg_ptr = 0; /* pointer for he function argument stack */
 	
 	switch (p->nodeTag) {
 	case WHILE_STMT:
@@ -186,7 +186,7 @@ void code_gen_trav(tree * p)
 		if (p->next != NULL) { code_gen_trav(p->next); } /* function params */
 		fprintf(fp, "(ASSIGN,FP,SP)\n(ADDI,SP,SP,%d)\n", (num_local_vars("main") + 5));
 		for(access_cnt=0, refrence_cnt=var_cnt; access_cnt<var_cnt; access_cnt++, refrence_cnt--) {
-		  fprintf(fp, "(ASSIGN,M[FP+%d],%s)\n", FP_BASE+access_cnt, fun_arg_stack[fun_arg_ptr - refrence_cnt]); /* was reg_refrence(s_size - refrence_cnt) */
+		  fprintf(fp, "(ASSIGN,M[FP+%d],%s)\n", FP_BASE+access_cnt, fun_arg_stack[fun_arg_ptr - refrence_cnt]);
 		}
 		/* reset the variable counters, and the function argument stack pointer */
 		var_cnt = 0; refrence_cnt = 1; fun_arg_ptr = 0;
